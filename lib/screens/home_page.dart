@@ -9,44 +9,16 @@ import 'package:open_file/open_file.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:animate_do/animate_do.dart';
 
-void main() {
-  runApp(const InvoiceGeneratorApp());
-}
 
-class InvoiceGeneratorApp extends StatelessWidget {
-  const InvoiceGeneratorApp({Key? key}) : super(key: key);
+
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Invoice Generator',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        cardTheme: CardTheme(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          filled: true,
-          fillColor: Colors.grey[100],
-        ),
-      ),
-      home: const InvoiceHomePage(),
-    );
-  }
+  _HomePageState createState() => _HomePageState();
 }
 
-class InvoiceHomePage extends StatefulWidget {
-  const InvoiceHomePage({Key? key}) : super(key: key);
-
-  @override
-  _InvoiceHomePageState createState() => _InvoiceHomePageState();
-}
-
-class _InvoiceHomePageState extends State<InvoiceHomePage> {
+class _HomePageState extends State<HomePage> {
   final _formKey = GlobalKey<FormState>();
   String _selectedColor = 'Blue';
   String _selectedLayout = 'Professional';
@@ -97,8 +69,6 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
   String _invoiceNumber = '';
   String _invoiceDate = DateTime.now().toString().split(' ')[0]; // Default to today (2025-07-03)
   String _dueDate = DateTime.now().toString().split(' ')[0]; // Default to today
-  double _taxPercentage = 0.0; // Add this line
-  final _taxController = TextEditingController(); // Add this line
 
 // Existing controllers...
   final TextEditingController _businessNameController = TextEditingController();
@@ -176,9 +146,6 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
           ? File(prefs.getString('logoPath')!)
           : null;
 
-      _taxPercentage = prefs.getDouble('taxPercentage') ?? 0.0;
-      _taxController.text = _taxPercentage.toString();
-
       // Update TextEditingControllers
       _businessNameController.text = _businessName;
       _businessAddressController.text = _businessAddress;
@@ -211,7 +178,6 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
     await prefs.setString('invoiceDate', _invoiceDate);
     await prefs.setString('dueDate', _dueDate);
     await prefs.setString('currency', _selectedCurrency); // Save currency
-    await prefs.setDouble('taxPercentage', _taxPercentage);
     if (_logoFile != null) {
       await prefs.setString('logoPath', _logoFile!.path);
     }
@@ -275,24 +241,24 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                 ? pw.Image(logoImage, width: 100, height: 100)
                 : pw.SizedBox(width: 100, height: 100),
             pw.Column(
-              children: [
-                pw.Container(
-                  color: PdfColor.fromInt(themeColor.value),
-                  padding: const pw.EdgeInsets.all(16),
-                  child: pw.Text(
-                    'INVOICE',
-                    style: pw.TextStyle(
-                      fontSize: 24,
-                      color: PdfColors.white,
-                      fontWeight: pw.FontWeight.bold,
-                      font: robotoFont,
+                children: [
+                  pw.Container(
+                    color: PdfColor.fromInt(themeColor.value),
+                    padding: const pw.EdgeInsets.all(16),
+                    child: pw.Text(
+                      'INVOICE',
+                      style: pw.TextStyle(
+                        fontSize: 24,
+                        color: PdfColors.white,
+                        fontWeight: pw.FontWeight.bold,
+                        font: robotoFont,
+                      ),
                     ),
                   ),
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text('Invoice #$_invoiceNumber', style:  pw.TextStyle(fontSize: 14, font: robotoFont)),
+                  pw.SizedBox(height: 5),
+                  pw.Text('Invoice #$_invoiceNumber', style:  pw.TextStyle(fontSize: 14, font: robotoFont)),
 
-              ]
+                ]
             )
 
           ],
@@ -333,22 +299,9 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
               .toList(),
         ),
         pw.SizedBox(height: 20),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(
-              'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 14, font: robotoFont),
-            ),
-            pw.Text(
-              'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 14, font: robotoFont),
-            ),
-            pw.Text(
-              'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, font: robotoFont),
-            ),
-          ],
+        pw.Text(
+          'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+          style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold,font: robotoFont),
         ),
       ],
     );
@@ -364,20 +317,20 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                 ? pw.Image(logoImage, width: 80, height: 80)
                 : pw.SizedBox(width: 80, height: 80),
             pw.Column(
-              children: [
-            pw.Text(
-              'INVOICE',
-              style: pw.TextStyle(
-                fontSize: 28,
-                color: PdfColor.fromInt(themeColor.value),
-                fontWeight: pw.FontWeight.bold,
-                font: robotoFont,
-              ),
-            ),
-                pw.SizedBox(height: 5),
-                pw.Text('Invoice #$_invoiceNumber', style:  pw.TextStyle(fontSize: 14, font: robotoFont)),
+                children: [
+                  pw.Text(
+                    'INVOICE',
+                    style: pw.TextStyle(
+                      fontSize: 28,
+                      color: PdfColor.fromInt(themeColor.value),
+                      fontWeight: pw.FontWeight.bold,
+                      font: robotoFont,
+                    ),
+                  ),
+                  pw.SizedBox(height: 5),
+                  pw.Text('Invoice #$_invoiceNumber', style:  pw.TextStyle(fontSize: 14, font: robotoFont)),
 
-              ])
+                ])
           ],
         ),
         // pw.SizedBox(height: 10),
@@ -436,22 +389,9 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
         pw.SizedBox(height: 20),
         pw.Align(
           alignment: pw.Alignment.centerRight,
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.end,
-            children: [
-              pw.Text(
-                'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, font: robotoFont),
-              ),
-              pw.Text(
-                'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, font: robotoFont),
-              ),
-              pw.Text(
-                'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, font: robotoFont),
-              ),
-            ],
+          child: pw.Text(
+            'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, font: robotoFont),
           ),
         ),
       ],
@@ -469,18 +409,18 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                 ? pw.Image(logoImage, width: 60, height: 60)
                 : pw.SizedBox(width: 60, height: 60),
             pw.Column(
-              children: [
-                pw.Text(
-                  'INVOICE',
-                  style: pw.TextStyle(
-                    fontSize: 20,
-                    color: PdfColor.fromInt(themeColor.value),
-                      font: robotoFont
+                children: [
+                  pw.Text(
+                    'INVOICE',
+                    style: pw.TextStyle(
+                        fontSize: 20,
+                        color: PdfColor.fromInt(themeColor.value),
+                        font: robotoFont
+                    ),
                   ),
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text('Invoice #$_invoiceNumber', style:  pw.TextStyle(fontSize: 12,font: robotoFont)),
-              ]
+                  pw.SizedBox(height: 5),
+                  pw.Text('Invoice #$_invoiceNumber', style:  pw.TextStyle(fontSize: 12,font: robotoFont)),
+                ]
             )
 
           ],
@@ -518,22 +458,9 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
               .toList(),
         ),
         pw.SizedBox(height: 20),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(
-              'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 12, font: robotoFont),
-            ),
-            pw.Text(
-              'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 12, font: robotoFont),
-            ),
-            pw.Text(
-              'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 14, font: robotoFont),
-            ),
-          ],
+        pw.Text(
+          'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+          style: pw.TextStyle(fontSize: 14, font: robotoFont),
         ),
       ],
     );
@@ -611,22 +538,9 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
         pw.SizedBox(height: 20),
         pw.Container(
           alignment: pw.Alignment.centerRight,
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.end,
-            children: [
-              pw.Text(
-                'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, font: robotoFont),
-              ),
-              pw.Text(
-                'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, font: robotoFont),
-              ),
-              pw.Text(
-                'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, font: robotoFont),
-              ),
-            ],
+          child: pw.Text(
+            'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, font: robotoFont),
           ),
         ),
       ],
@@ -644,19 +558,19 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                 ? pw.Image(logoImage, width: 60, height: 60)
                 : pw.SizedBox(width: 60, height: 60),
             pw.Column(
-              children: [
-                pw.Text(
-                  'INVOICE',
-                  style: pw.TextStyle(
-                    fontSize: 20,
-                    color: PdfColor.fromInt(themeColor.value),
-                    fontWeight: pw.FontWeight.bold,
-                    font: robotoFont,
+                children: [
+                  pw.Text(
+                    'INVOICE',
+                    style: pw.TextStyle(
+                      fontSize: 20,
+                      color: PdfColor.fromInt(themeColor.value),
+                      fontWeight: pw.FontWeight.bold,
+                      font: robotoFont,
+                    ),
                   ),
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text('Invoice #$_invoiceNumber', style:  pw.TextStyle(fontSize: 12, font: robotoFont)),
-              ]
+                  pw.SizedBox(height: 5),
+                  pw.Text('Invoice #$_invoiceNumber', style:  pw.TextStyle(fontSize: 12, font: robotoFont)),
+                ]
             )
           ],
         ),
@@ -707,37 +621,24 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
         pw.SizedBox(height: 10),
         pw.Container(
           alignment: pw.Alignment.centerRight,
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.end,
-            children: [
-              pw.Text(
-                'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 10, font: robotoFont),
-              ),
-              pw.Text(
-                'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 10, font: robotoFont),
-              ),
-              pw.Text(
-                'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: robotoFont),
-              ),
-            ],
+          child: pw.Text(
+            'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: robotoFont),
           ),
         ),
-
       ],
     );
   }
 
+  // ... (Rest of the _InvoiceHomePageState class and other parts remain unchanged)
+
+
 
   double calculateTotal() {
-    double subtotal = 0.0;
-    for (var item in _items) {
-      subtotal += item['quantity'] * item['price'];
-    }
-    double taxAmount = subtotal * (_taxPercentage / 100);
-    return subtotal + taxAmount;
+    return _items.fold(
+      0,
+          (sum, item) => sum + (item['quantity'] * item['price']),
+    );
   }
 
   void _addItem() {
@@ -1034,7 +935,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                   ),
                 ),
 
-        // Client Info
+                // Client Info
                 const SizedBox(height: 16),
                 FadeInDown(
                   duration: const Duration(milliseconds: 800),
@@ -1063,6 +964,16 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                             validator: (value) => value!.isEmpty ? 'Required' : null,
 
                           ),
+                          // const SizedBox(height: 12),
+                          // TextFormField(
+                          //   controller: _clientNameController,
+                          //   decoration: const InputDecoration(
+                          //     labelText: 'Client\'s Name',
+                          //     prefixIcon: Icon(Icons.person),
+                          //   ),
+                          //   onChanged: (value) => _clientName = value,
+                          //   validator: (value) => value!.isEmpty ? 'Required' : null,
+                          // ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _clientEmailController,
@@ -1097,7 +1008,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                   ),
                 ),
 
-        // Invoice Details
+                // Invoice Details
                 const SizedBox(height: 16),
                 FadeInDown(
                   duration: const Duration(milliseconds: 850),
@@ -1259,22 +1170,6 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                               style: GoogleFonts.poppins(color: const Color(0xFF2C3E50)),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _taxController,
-                            decoration: InputDecoration(
-                              labelText: 'Tax (%)',
-                              prefixIcon: const Icon(Icons.percent),
-                              suffixText: '%',
-                            ),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              setState(() {
-                                _taxPercentage = double.tryParse(value) ?? 0.0;
-                              });
-                            },
-                          ),
-
                         ],
                       ),
                     ),
