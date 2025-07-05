@@ -1,4 +1,4 @@
-package com.example.invoice_generator
+package com.oopsable.biller_pro
 
 import io.flutter.embedding.android.FlutterActivity
 

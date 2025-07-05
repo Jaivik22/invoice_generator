@@ -14,12 +14,18 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , RouteAware{
   List<dynamic> _savedKeys = [];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadSavedKeys();
+  }
+
+  @override
+  void didPopNext() {
     _loadSavedKeys();
   }
 
@@ -28,6 +34,21 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _savedKeys =box.keys.toList() ?? [];
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+    print('didChangeDependencies');
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    routeObserver.unsubscribe(this);
+
   }
 
   Future<void> _deleteInvoice(String key) async {
@@ -42,28 +63,31 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print('build');
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Invoice Generator',
-          style: GoogleFonts.poppins(color: Colors.white),
+          'Biller Pro',
+          style: GoogleFonts.poppins(color: Colors.black),
         ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFD6E4FF), Color(0xFFF5F7FA)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFE9DFFF), Color(0xFFD1E7FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                stops: [0.0, 1.0],
+              ),
             ),
           ),
-        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFD6E4FF), Color(0xFFF5F7FA)],
+            colors: [Color(0xFFE9DFFF), Color(0xFFD1E7FF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
+            stops: [0.0, 1.0],
           ),
         ),
         padding: const EdgeInsets.all(16.0),
@@ -82,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2980B9),
+                  backgroundColor: const Color(0xFF349D78),
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
                 child: Text(
@@ -158,6 +182,15 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.grey[200],
+        padding: const EdgeInsets.all(15.0),
+        child: Text(
+          'Powered by Oopsable',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
         ),
       ),
     );

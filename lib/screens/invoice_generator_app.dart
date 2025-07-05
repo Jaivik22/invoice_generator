@@ -8,6 +8,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:image/image.dart' as img;
+import 'package:share_plus/share_plus.dart';
+import 'dart:typed_data' show Uint8List;
 
 import '../model/invoice_info.dart';
 import 'home_page.dart';
@@ -16,13 +20,16 @@ void main() {
   runApp(const InvoiceGeneratorApp());
 }
 
+/// define the observer
+final RouteObserver<ModalRoute<void>> routeObserver =
+RouteObserver<ModalRoute<void>>();
+
 class InvoiceGeneratorApp extends StatelessWidget {
   const InvoiceGeneratorApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Invoice Generator',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         cardTheme: CardTheme(
@@ -37,6 +44,7 @@ class InvoiceGeneratorApp extends StatelessWidget {
           fillColor: Colors.grey[100],
         ),
       ),
+      navigatorObservers: [routeObserver],
       home: const HomePage(),
     );
   }
@@ -302,6 +310,56 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
     );
     await file.writeAsBytes(await pdf.save());
     await OpenFile.open(file.path);
+  }
+
+  Future<void> _generateAndSharePdf() async {
+    final pdf = pw.Document();
+    final themeColor = _colorOptions[_selectedColor]!;
+    pw.MemoryImage? logoImage;
+    if (_logoFile != null && _logoFile!.existsSync()) {
+      logoImage = pw.MemoryImage(_logoFile!.readAsBytesSync());
+    }
+
+    // Load Roboto font
+    final fontData = await DefaultAssetBundle.of(
+      context,
+    ).load('assets/fonts/Roboto-Regular.ttf');
+    final robotoFont = pw.Font.ttf(fontData);
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          switch (_selectedLayout) {
+            case 'Modern':
+              return _buildModernLayout(themeColor, logoImage, robotoFont);
+            case 'Minimal':
+              return _buildMinimalLayout(themeColor, logoImage, robotoFont);
+            case 'Elegant':
+              return _buildElegantLayout(themeColor, logoImage, robotoFont);
+            case 'Compact':
+              return _buildCompactLayout(themeColor, logoImage, robotoFont);
+            default:
+              return _buildProfessionalLayout(
+                themeColor,
+                logoImage,
+                robotoFont,
+              );
+          }
+        },
+      ),
+    );
+
+    final output = await getTemporaryDirectory();
+    final file = File(
+      '${output.path}/invoice_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+    await file.writeAsBytes(await pdf.save());
+    // Share the PDF
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'application/pdf')],
+      text: 'Invoice #$_invoiceNumber',
+      subject: 'Invoice from $_businessName',
+    );
   }
 
   pw.Widget _buildProfessionalLayout(
@@ -1019,12 +1077,96 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
       },
     );
   }
+  Future<Uint8List> compressImage(String path) async {
+    final image = img.decodeImage(File(path).readAsBytesSync())!;
+    final resized = img.copyResize(image, width: 800);
+    return Uint8List.fromList(img.encodeJpg(resized, quality: 70));
+  }
+
+
+// Add this method:
+  Future<void> _generateAndSavePDF() async {
+    final pdf = pw.Document();
+    final themeColor = _colorOptions[_selectedColor]!;
+    pw.MemoryImage? logoImage;
+
+    // if (_logoFile != null && _logoFile!.existsSync()) {
+    //   logoImage = pw.MemoryImage(_logoFile!.readAsBytesSync());
+    // }
+
+    if (_logoFile != null && _logoFile!.existsSync()) {
+      final compressedImage = await compressImage(_logoFile!.path);
+      logoImage = pw.MemoryImage(compressedImage);
+    }
+
+    // Load Roboto font
+    final fontData = await DefaultAssetBundle.of(context).load('assets/fonts/Roboto-Regular.ttf');
+    final robotoFont = pw.Font.ttf(fontData);
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          switch (_selectedLayout) {
+            case 'Modern':
+              return _buildModernLayout(themeColor, logoImage, robotoFont);
+            case 'Minimal':
+              return _buildMinimalLayout(themeColor, logoImage, robotoFont);
+            case 'Elegant':
+              return _buildElegantLayout(themeColor, logoImage, robotoFont);
+            case 'Compact':
+              return _buildCompactLayout(themeColor, logoImage, robotoFont);
+            default:
+              return _buildProfessionalLayout(themeColor, logoImage, robotoFont);
+          }
+        },
+      ),
+    );
+
+    // Request storage permission (needed for Android 10 and below)
+    if (Platform.isAndroid) {
+      await Permission.storage.request();
+    }
+
+    Directory? downloadsDir;
+
+    if (Platform.isAndroid || Platform.isIOS) {
+      downloadsDir = await getExternalStorageDirectory(); // falls back to app dir
+    } else {
+      downloadsDir = await getDownloadsDirectory();
+    }
+
+    final fileName = 'invoice_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    final filePath = '/storage/emulated/0/Download/$fileName';
+    final file = File(filePath);
+
+    await file.writeAsBytes(await pdf.save());
+
+    // // Optionally open the file
+    // await OpenFile.open(file.path);
+    print('PDF saved to ${file.path}');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('PDF saved to ${file.path}')),
+    );
+  }
+
+  void _removeItem(int index) {
+    if (_items.length > 1) { // Prevent removing the last item
+      setState(() {
+        _items.removeAt(index);
+        _itemControllers.removeAt(index);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('At least one item is required')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Invoice Generator'),
+        title: const Text(''),
         centerTitle: true,
         actions: [
           Padding(
@@ -1052,8 +1194,8 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                       );
                     }
                   },
-                  icon: const Icon(Icons.save, size: 18),
-                  label: const Text('Save'),
+                  icon: const Icon(Icons.save, size: 16,color: Color(0xFF2E8B77),),
+                  label: const Text('Save',style: TextStyle(color: Color(0xFF2E8B77)),),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -1062,25 +1204,69 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                     textStyle: const TextStyle(fontSize: 12),
                   ),
                 ),
-                // const SizedBox(width: 8),
-                // ElevatedButton.icon(
-                //   onPressed: _loadSavedInfo,
-                //   icon: const Icon(Icons.download, size: 18),
-                //   label: const Text('Load'),
-                //   style: ElevatedButton.styleFrom(
-                //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                //     textStyle: const TextStyle(fontSize: 12),
-                //   ),
-                // ),
-                const SizedBox(width: 8),
+
+
+                const SizedBox(width: 5),
                 ElevatedButton.icon(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _generatePDF();
                     }
+                    else{
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Please fill necessary fields")),
+                      );
+                    }
                   },
-                  icon: const Icon(Icons.picture_as_pdf, size: 18),
-                  label: const Text('Generate'),
+                  icon: const Icon(Icons.picture_as_pdf, size: 16,color: Color(0xFF2E8B77),),
+                  label: const Text('Preview',style: TextStyle(color: Color(0xFF2E8B77)),),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                ),
+
+                const SizedBox(width: 5),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _generateAndSharePdf();
+                    }
+                    else{
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Please fill necessary fields")),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.share, size: 16,color: Color(0xFF2E8B77),),
+                  label: const Text('Share',style: TextStyle(color: Color(0xFF2E8B77)),),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                ),
+
+
+                const SizedBox(width: 5),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _generateAndSavePDF();
+                    }
+                    else{
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Please fill necessary fields")),
+                      );
+                    }
+                  },
+                  icon:  Image.asset( 'assets/images/download_icon.png',height: 16,width: 16,),
+                  label: const Text('Download',style: TextStyle(color: Color(0xFF2E8B77)),),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -1262,8 +1448,8 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                               const SizedBox(width: 12),
                               ElevatedButton.icon(
                                 onPressed: _pickLogo,
-                                icon: const Icon(Icons.upload, size: 18),
-                                label: const Text('Upload'),
+                                icon: const Icon(Icons.upload, size: 18,color: Color(0xFF2E8B77)),
+                                label: const Text('Upload',style: TextStyle(color: Color(0xFF2E8B77))),
                               ),
                             ],
                           ),
@@ -1516,63 +1702,55 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                             int index = entry.key;
                             return Column(
                               children: [
-                                TextFormField(
-                                  controller:
-                                      _itemControllers[index]['description'],
-                                  decoration: const InputDecoration(
-                                    labelText: 'Description',
-                                    prefixIcon: Icon(Icons.description),
-                                  ),
-                                  onChanged:
-                                      (value) =>
-                                          _items[index]['description'] = value,
-                                  validator: (value) {
-                                    if (_items.every(
-                                      (item) => item['description'].isEmpty,
-                                    )) {
-                                      return index == 0
-                                          ? 'At least one item description is required'
-                                          : null;
-                                    }
-                                    return null;
-                                  },
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: _itemControllers[index]['description'],
+                                        decoration: const InputDecoration(
+                                          labelText: 'Description',
+                                          prefixIcon: Icon(Icons.description),
+                                        ),
+                                        onChanged: (value) => _items[index]['description'] = value,
+                                        validator: (value) {
+                                          if (_items.every((item) => item['description'].isEmpty)) {
+                                            return index == 0 ? 'At least one item description is required' : null;
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _removeItem(index),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: TextFormField(
-                                        controller:
-                                            _itemControllers[index]['quantity'],
+                                        controller: _itemControllers[index]['quantity'],
                                         decoration: const InputDecoration(
                                           labelText: 'Quantity',
                                           prefixIcon: Icon(Icons.numbers),
                                         ),
                                         keyboardType: TextInputType.number,
-                                        onChanged:
-                                            (value) =>
-                                                _items[index]['quantity'] =
-                                                    int.tryParse(value) ?? 0,
+                                        onChanged: (value) => _items[index]['quantity'] = int.tryParse(value) ?? 0,
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: TextFormField(
-                                        controller:
-                                            _itemControllers[index]['price'],
+                                        controller: _itemControllers[index]['price'],
                                         decoration: InputDecoration(
                                           labelText: 'Price',
-                                          prefixIcon: Icon(
-                                            Icons.monetization_on,
-                                          ),
+                                          prefixIcon: const Icon(Icons.monetization_on),
                                           prefixText: _selectedCurrency,
                                         ),
                                         keyboardType: TextInputType.number,
-                                        onChanged:
-                                            (value) =>
-                                                _items[index]['price'] =
-                                                    double.tryParse(value) ??
-                                                    0.0,
+                                        onChanged: (value) => _items[index]['price'] = double.tryParse(value) ?? 0.0,
                                       ),
                                     ),
                                   ],

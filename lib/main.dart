@@ -5,6 +5,8 @@ import 'package:invoice_generator/screens/invoice_generator_app.dart';
 
 import 'model/invoice_info.dart';
 
+
+
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
@@ -21,12 +23,18 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return SafeArea(
+      bottom: true,
+      top: false,
+      left: false,
+      right: false,
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        ),
+        home: const InvoiceGeneratorApp(),
       ),
-      home: const InvoiceGeneratorApp(),
     );
   }
 }
