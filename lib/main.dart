@@ -29,6 +29,7 @@ class MyApp extends StatelessWidget {
       left: false,
       right: false,
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
