@@ -190,7 +190,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
         child: Text(
           'Powered by Oopsable',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          style: TextStyle(fontSize: 12, color:Color(0xFF2E8B77)),
         ),
       ),
     );
