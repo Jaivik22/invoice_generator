@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:invoice_generator/screens/invoice_generator_app.dart';
@@ -12,6 +13,8 @@ void main() async{
   await Hive.initFlutter();
 
   Hive.registerAdapter(InvoiceInfoAdapter());
+  await MobileAds.instance.initialize();
+
 
   await Hive.openBox<InvoiceInfo>('invoiceBox');
   runApp(const MyApp());

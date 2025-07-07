@@ -1,10 +1,13 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart' show Get;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 
 import '../model/invoice_info.dart';
+import '../services/Admob_service.dart';
 import 'invoice_generator_app.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,6 +19,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , RouteAware{
   List<dynamic> _savedKeys = [];
+  final AdController adController = Get.put(AdController());
 
   @override
   void initState() {
@@ -61,25 +65,163 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
     });
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   print('build');
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       title: Text(
+  //         'Biller Pro',
+  //         style: GoogleFonts.poppins(color: Colors.black),
+  //       ),
+  //         flexibleSpace: Container(
+  //           decoration: const BoxDecoration(
+  //             gradient: LinearGradient(
+  //               colors: [Color(0xFFE9DFFF), Color(0xFFD1E7FF)],
+  //               begin: Alignment.topLeft,
+  //               end: Alignment.bottomRight,
+  //               stops: [0.0, 1.0],
+  //             ),
+  //           ),
+  //         ),
+  //     ),
+  //     body: Container(
+  //       decoration: const BoxDecoration(
+  //         gradient: LinearGradient(
+  //           colors: [Color(0xFFE9DFFF), Color(0xFFD1E7FF)],
+  //           begin: Alignment.topLeft,
+  //           end: Alignment.bottomRight,
+  //           stops: [0.0, 1.0],
+  //         ),
+  //       ),
+  //       padding: const EdgeInsets.all(16.0),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           FadeInDown(
+  //             duration: const Duration(milliseconds: 500),
+  //             child: ElevatedButton(
+  //               onPressed: () {
+  //                 Navigator.push(
+  //                   context,
+  //                   MaterialPageRoute(
+  //                     builder: (context) => const InvoiceHomePage(invoiceKey: null),
+  //                   ),
+  //                 );
+  //               },
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: const Color(0xFF349D78),
+  //                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+  //               ),
+  //               child: Text(
+  //                 'Create New Invoice',
+  //                 style: GoogleFonts.poppins(color: Colors.white),
+  //               ),
+  //             ),
+  //           ),
+  //           const SizedBox(height: 20),
+  //           Text(
+  //             'Saved Invoices',
+  //             style: GoogleFonts.poppins(
+  //               fontSize: 18,
+  //               fontWeight: FontWeight.w600,
+  //               color: const Color(0xFF2C3E50),
+  //             ),
+  //           ),
+  //           const SizedBox(height: 10),
+  //           Expanded(
+  //             child: _savedKeys.isEmpty
+  //                 ? Center(
+  //               child: Text(
+  //                 'No saved invoices yet.',
+  //                 style: GoogleFonts.poppins(color: const Color(0xFF2C3E50)),
+  //               ),
+  //             )
+  //                 : ListView.builder(
+  //               itemCount: _savedKeys.length,
+  //               itemBuilder: (context, index) {
+  //                 final key = _savedKeys[index];
+  //                 return FadeInDown(
+  //                   duration: const Duration(milliseconds: 600),
+  //                   child: Card(
+  //                     child: ListTile(
+  //                       title: Text(key, style: GoogleFonts.poppins()),
+  //                       trailing: IconButton(
+  //                         icon: const Icon(Icons.delete, color: Colors.red),
+  //                         onPressed: () async {
+  //                           final confirm = await showDialog<bool>(
+  //                             context: context,
+  //                             builder: (context) => AlertDialog(
+  //                               title: Text('Delete $key?'),
+  //                               content: const Text('This will permanently delete the invoice data.'),
+  //                               actions: [
+  //                                 TextButton(
+  //                                   onPressed: () => Navigator.pop(context, false),
+  //                                   child: const Text('Cancel'),
+  //                                 ),
+  //                                 TextButton(
+  //                                   onPressed: () => Navigator.pop(context, true),
+  //                                   child: const Text('Delete'),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           );
+  //                           if (confirm == true) {
+  //                             await _deleteInvoice(key);
+  //                           }
+  //                         },
+  //                       ),
+  //                       onTap: () {
+  //                         Navigator.push(
+  //                           context,
+  //                           MaterialPageRoute(
+  //                             builder: (context) => InvoiceHomePage(invoiceKey: key),
+  //                           ),
+  //                         );
+  //                       },
+  //                     ),
+  //                   ),
+  //                 );
+  //               },
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //     bottomNavigationBar: Container(
+  //       color: Colors.grey[200],
+  //       padding: const EdgeInsets.all(15.0),
+  //       child: Text(
+  //         'Powered by Oopsable',
+  //         textAlign: TextAlign.center,
+  //         style: TextStyle(fontSize: 12, color:Color(0xFF2E8B77)),
+  //       ),
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
-    print('build');
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Biller Pro',
-          style: GoogleFonts.poppins(color: Colors.black),
+          style: GoogleFonts.poppins(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFE9DFFF), Color(0xFFD1E7FF)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                stops: [0.0, 1.0],
-              ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFE9DFFF), Color(0xFFD1E7FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              stops: [0.0, 1.0],
             ),
           ),
+        ),
+        elevation: 0,
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -98,20 +240,29 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
               duration: const Duration(milliseconds: 500),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const InvoiceHomePage(invoiceKey: null),
-                    ),
-                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => const InvoiceHomePage(invoiceKey: null),
+                  //   ),
+                  // );
+                  adController.showOrLoadInterstitialAd();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF349D78),
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 5,
                 ),
                 child: Text(
                   'Create New Invoice',
-                  style: GoogleFonts.poppins(color: Colors.white),
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -126,61 +277,140 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
             ),
             const SizedBox(height: 10),
             Expanded(
-              child: _savedKeys.isEmpty
-                  ? Center(
-                child: Text(
-                  'No saved invoices yet.',
-                  style: GoogleFonts.poppins(color: const Color(0xFF2C3E50)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              )
-                  : ListView.builder(
-                itemCount: _savedKeys.length,
-                itemBuilder: (context, index) {
-                  final key = _savedKeys[index];
-                  return FadeInDown(
+                child: _savedKeys.isEmpty
+                    ? Center(
+                  child: FadeInUp(
                     duration: const Duration(milliseconds: 600),
-                    child: Card(
-                      child: ListTile(
-                        title: Text(key, style: GoogleFonts.poppins()),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text('Delete $key?'),
-                                content: const Text('This will permanently delete the invoice data.'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, true),
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.description_outlined,
+                          size: 80,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No Invoices Yet',
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF2C3E50),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Start by creating your first invoice!',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const InvoiceHomePage(invoiceKey: null),
                               ),
                             );
-                            if (confirm == true) {
-                              await _deleteInvoice(key);
-                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF349D78),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            'Create Invoice Now',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                    : ListView.builder(
+                  padding: const EdgeInsets.all(8.0),
+                  itemCount: _savedKeys.length,
+                  itemBuilder: (context, index) {
+                    final key = _savedKeys[index];
+                    return FadeInDown(
+                      duration: const Duration(milliseconds: 600),
+                      child: Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          title: Text(
+                            key,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Delete $key?'),
+                                  content: const Text('This will permanently delete the invoice data.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                await _deleteInvoice(key);
+                              }
+                            },
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => InvoiceHomePage(invoiceKey: key),
+                              ),
+                            );
                           },
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => InvoiceHomePage(invoiceKey: key),
-                            ),
-                          );
-                        },
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
+            Obx(() => adController.getBannerAdWidget()),
           ],
         ),
       ),
@@ -190,7 +420,10 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
         child: Text(
           'Powered by Oopsable',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color:Color(0xFF2E8B77)),
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: const Color(0xFF2E8B77),
+          ),
         ),
       ),
     );
