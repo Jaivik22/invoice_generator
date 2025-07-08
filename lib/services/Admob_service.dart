@@ -1,8 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../screens/invoice_generator_app.dart';
 
 class AdUnits {
   static const String interstitialTest = 'ca-app-pub-3940256099942544/1033173712';
@@ -58,14 +63,59 @@ class AdController extends GetxController {
     super.onInit();
     initialize();
   }
+  void checkAndLoadAdsIfNeeded() {
+    Connectivity().checkConnectivity().then((status) {
+      if (status != ConnectivityResult.none &&
+          !isAdLoaded.value &&
+          !isAdLoading.value) {
+        initializeAds();
+      }
+    });
+  }
+
+
+
+  StreamSubscription? _connectivitySubscription;
 
   Future<void> initialize() async {
-    await AdUnits.loadFromRemoteConfig(); // Ensure ad unit IDs are loaded
+    preloadInterstitialAd();
+
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstLaunch = prefs.getBool('is_first_launch') ?? true;
+
+    if (isFirstLaunch) {
+      await prefs.setBool('is_first_launch', false);
+      print("First launch detected — skipping ad preload.");
+      return;
+    }
+
+    // check internet status first
+    final connectivity = await Connectivity().checkConnectivity();
+    if (connectivity == ConnectivityResult.none) {
+      print("No internet connection — waiting for internet to load ads.");
+      listenForInternetAndLoadAds();
+    } else {
+      await initializeAds();
+    }
+  }
+
+  Future<void> initializeAds() async {
+    await AdUnits.loadFromRemoteConfig();
     await MobileAds.instance.initialize();
     preloadInterstitialAd();
     preloadRewardedAd();
     preloadNativeAd();
-    preloadBannerAd(); // Added banner ad preload
+    preloadBannerAd();
+  }
+
+  void listenForInternetAndLoadAds() {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((status) {
+      if (status != ConnectivityResult.none) {
+        print("Internet available — loading ads.");
+        _connectivitySubscription?.cancel(); // stop listening once internet is back
+        initializeAds();
+      }
+    });
   }
 
   void preloadInterstitialAd() {
@@ -101,11 +151,42 @@ class AdController extends GetxController {
     );
   }
 
-  void showOrLoadInterstitialAd() {
+  void showOrLoadInterstitialAd(BuildContext context) {
     final adUnitId = AdUnits.interstitial;
+
+    void goToNextPage() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const InvoiceHomePage(invoiceKey: null),
+        ),
+      );
+    }
+
     if (isAdLoaded.value && _interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          isAdLoaded.value = false;
+          preloadInterstitialAd();
+          goToNextPage();
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          ad.dispose();
+          isAdLoaded.value = false;
+          preloadInterstitialAd();
+          goToNextPage();
+        },
+      );
+
       _interstitialAd!.show();
     } else {
+      if (Get.context == null) {
+        debugPrint('Cannot show dialog: no context available');
+        goToNextPage(); // fallback if no context
+        return;
+      }
+
       Get.generalDialog(
         barrierDismissible: false,
         barrierLabel: "Loading",
@@ -128,23 +209,31 @@ class AdController extends GetxController {
           );
         },
       );
+
       isAdLoading.value = true;
+
       InterstitialAd.load(
         adUnitId: adUnitId,
         request: const AdRequest(),
         adLoadCallback: InterstitialAdLoadCallback(
           onAdLoaded: (InterstitialAd ad) {
             Get.back();
+
             ad.fullScreenContentCallback = FullScreenContentCallback(
               onAdDismissedFullScreenContent: (ad) {
                 ad.dispose();
+                isAdLoaded.value = false;
                 preloadInterstitialAd();
+                goToNextPage();
               },
               onAdFailedToShowFullScreenContent: (ad, error) {
                 ad.dispose();
+                isAdLoaded.value = false;
                 preloadInterstitialAd();
+                goToNextPage();
               },
             );
+
             ad.show();
             isAdLoaded.value = false;
             isAdLoading.value = false;
@@ -152,6 +241,7 @@ class AdController extends GetxController {
           onAdFailedToLoad: (LoadAdError error) {
             Get.back();
             isAdLoading.value = false;
+            goToNextPage();
           },
         ),
       );
@@ -204,6 +294,11 @@ class AdController extends GetxController {
         },
       );
     } else if (retryCount < maxRetries) {
+      if (Get.context == null) {
+        debugPrint('Cannot show dialog: no context available');
+        onRewarded(); // fallback if no context
+        return;
+      }
       Get.generalDialog(
         barrierDismissible: true, // Made dismissible
         barrierLabel: "Loading",
@@ -252,14 +347,25 @@ class AdController extends GetxController {
             isRewardedLoaded.value = false;
             isRewardedLoading.value = false;
           },
-          onAdFailedToLoad: (LoadAdError error) {
-            print('Rewarded Ad failed to load: ${error.code} - ${error.message}');
-            Get.back();
-            isRewardedLoading.value = false;
-            Future.delayed(Duration(seconds: 5), () {
-              showOrLoadRewardedAd(onRewarded: onRewarded, retryCount: retryCount + 1);
-            });
-          },
+            onAdFailedToLoad: (LoadAdError error) {
+              print('Rewarded Ad failed to load: ${error.code} - ${error.message}');
+              Get.back();
+              isRewardedLoading.value = false;
+
+              if (retryCount + 1 >= maxRetries) {
+                // Max retries reached → proceed anyway
+                print("Max retries reached. Proceeding without ad.");
+                onRewarded();
+              } else {
+                Future.delayed(Duration(seconds: 5), () {
+                  showOrLoadRewardedAd(
+                    onRewarded: onRewarded,
+                    retryCount: retryCount + 1,
+                    maxRetries: maxRetries,
+                  );
+                });
+              }
+            }
         ),
       );
     }
@@ -340,6 +446,7 @@ class AdController extends GetxController {
     _rewardedAd?.dispose();
     _nativeAd?.dispose();
     _bannerAd?.dispose(); // Added banner ad disposal
+    _connectivitySubscription?.cancel();
     super.onClose();
   }
 }

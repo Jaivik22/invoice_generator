@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:pdf/pdf.dart';
@@ -14,6 +17,7 @@ import 'package:share_plus/share_plus.dart';
 import 'dart:typed_data' show Uint8List;
 
 import '../model/invoice_info.dart';
+import '../services/Admob_service.dart';
 import 'home_page.dart';
 
 void main() {
@@ -59,7 +63,10 @@ class InvoiceHomePage extends StatefulWidget {
   _InvoiceHomePageState createState() => _InvoiceHomePageState();
 }
 
-class _InvoiceHomePageState extends State<InvoiceHomePage> {
+class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingObserver{
+
+  final AdController adController = Get.put(AdController());
+
   final _formKey = GlobalKey<FormState>();
   String _selectedColor = 'Blue';
   String _selectedLayout = 'Professional';
@@ -80,12 +87,9 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
     'Compact',
   ];
 
-  // User info fields
-  // Existing state variables...
   String _businessName = '';
   String _businessAddress = '';
 
-  // String _clientName = '';
   String _clientEmail = '';
   List<Map<String, dynamic>> _items = [
     {'description': '', 'quantity': 0, 'price': 0.0},
@@ -158,6 +162,13 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
 
     if (widget.invoiceKey != null && widget.invoiceKey!.isNotEmpty) {
       _loadSavedInfo();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      adController.checkAndLoadAdsIfNeeded();
     }
   }
 
@@ -1148,6 +1159,8 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('PDF saved to ${file.path}')),
     );
+    await OpenFile.open(file.path);
+
   }
 
   void _removeItem(int index) {
@@ -1253,21 +1266,32 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                   ),
                 ),
 
-
                 const SizedBox(width: 5),
                 ElevatedButton.icon(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      _generateAndSavePDF();
-                    }
-                    else{
+                      // Show Rewarded Ad first
+                      adController.showOrLoadRewardedAd(
+                        onRewarded: () {
+                          // User watched the ad and earned the reward
+                          _generateAndSavePDF();
+                        },
+                      );
+                    } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Please fill necessary fields")),
                       );
                     }
                   },
-                  icon:  Image.asset( 'assets/images/download_icon.png',height: 16,width: 16,),
-                  label: const Text('Download',style: TextStyle(color: Color(0xFF2E8B77)),),
+                  icon: Image.asset(
+                    'assets/images/download_icon.png',
+                    height: 16,
+                    width: 16,
+                  ),
+                  label: const Text(
+                    'Download',
+                    style: TextStyle(color: Color(0xFF2E8B77)),
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -1275,7 +1299,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                     ),
                     textStyle: const TextStyle(fontSize: 12),
                   ),
-                ),
+                )
               ],
             ),
           ),
@@ -1793,6 +1817,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> {
                     ),
                   ),
                 ),
+                Obx(() => adController.getBannerAdWidget()),
               ],
             ),
           ),
