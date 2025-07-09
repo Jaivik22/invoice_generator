@@ -294,7 +294,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     final robotoFont = pw.Font.ttf(fontData);
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         build: (pw.Context context) {
           switch (_selectedLayout) {
             case 'Modern':
@@ -339,7 +339,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     final robotoFont = pw.Font.ttf(fontData);
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         build: (pw.Context context) {
           switch (_selectedLayout) {
             case 'Modern':
@@ -374,14 +374,12 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     );
   }
 
-  pw.Widget _buildProfessionalLayout(
+  List<pw.Widget> _buildProfessionalLayout(
     Color themeColor,
     pw.MemoryImage? logoImage,
     pw.Font robotoFont,
   ) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
+    return [
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -491,17 +489,16 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             ),
           ],
         ),
-      ],
-    );
+    ];
   }
 
-  pw.Widget _buildModernLayout(
+  //
+  List<pw.Widget> _buildModernLayout(
     Color themeColor,
     pw.MemoryImage? logoImage,
     pw.Font robotoFont,
   ) {
-    return pw.Column(
-      children: [
+    return [
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -639,18 +636,15 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             ],
           ),
         ),
-      ],
-    );
+    ];
   }
 
-  pw.Widget _buildMinimalLayout(
+  List<pw.Widget> _buildMinimalLayout(
     Color themeColor,
     pw.MemoryImage? logoImage,
     pw.Font robotoFont,
   ) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
+    return [
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -741,18 +735,15 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             ),
           ],
         ),
-      ],
-    );
+    ];
   }
 
-  pw.Widget _buildElegantLayout(
+  List<pw.Widget> _buildElegantLayout(
     Color themeColor,
     pw.MemoryImage? logoImage,
     pw.Font robotoFont,
   ) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
+    return [
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -871,18 +862,15 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             ],
           ),
         ),
-      ],
-    );
+    ];
   }
 
-  pw.Widget _buildCompactLayout(
+  List<pw.Widget> _buildCompactLayout(
     Color themeColor,
     pw.MemoryImage? logoImage,
     pw.Font robotoFont,
   ) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
+    return [
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -1030,8 +1018,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             ],
           ),
         ),
-      ],
-    );
+      ];
   }
 
   double calculateTotal() {
@@ -1116,7 +1103,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     final robotoFont = pw.Font.ttf(fontData);
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         build: (pw.Context context) {
           switch (_selectedLayout) {
             case 'Modern':
@@ -1179,6 +1166,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: Container(child:  Obx(() => adController.getBannerAdWidget()),),
       appBar: AppBar(
         title: const Text(''),
         centerTitle: true,
@@ -1817,7 +1805,6 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                     ),
                   ),
                 ),
-                Obx(() => adController.getBannerAdWidget()),
               ],
             ),
           ),
