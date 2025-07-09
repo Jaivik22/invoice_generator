@@ -283,20 +283,27 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                 ),
               ),
             ),
-            Obx(() => adController.getBannerAdWidget()),
+
           ],
         ),
       ),
       bottomNavigationBar: Container(
         color: Colors.grey[200],
-        padding: const EdgeInsets.all(15.0),
-        child: Text(
-          'Powered by Oopsable',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: const Color(0xFF2E8B77),
-          ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Powered by Oopsable',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: const Color(0xFF2E8B77),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Obx(() => adController.getBannerAdWidget()),
+          ],
         ),
       ),
     );
