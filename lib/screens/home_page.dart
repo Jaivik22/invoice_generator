@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart' show Get;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
+import 'package:lottie/lottie.dart';
 
 import '../model/invoice_info.dart';
 import '../services/Admob_service.dart';
@@ -20,12 +22,32 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , RouteAware{
   List<dynamic> _savedKeys = [];
   final AdController adController = Get.put(AdController());
+  bool _isReady = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadSavedKeys();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    try {
+      // Perform heavy initialization tasks
+      await Hive.openBox<InvoiceInfo>('invoiceBox');
+      await MobileAds.instance.initialize();
+
+      _loadSavedKeys();
+
+      setState(() {
+        _isReady = true;
+      });
+
+
+    } catch (e) {
+      // Handle errors (e.g., show error screen or retry)
+      print('Initialization error: $e');
+    }
   }
 
   @override
@@ -149,6 +171,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
               ),
             ),
             const SizedBox(height: 10),
+
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -162,7 +185,8 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                     ),
                   ],
                 ),
-                child: _savedKeys.isEmpty
+                child: !_isReady?  Lottie.asset('assets/animation/loading_files.json'):
+                _savedKeys.isEmpty
                     ? Center(
                   child: FadeInUp(
                     duration: const Duration(milliseconds: 600),
@@ -221,7 +245,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                     ),
                   ),
                 )
-                    : ListView.builder(
+                    :  ListView.builder(
                   padding: const EdgeInsets.all(8.0),
                   itemCount: _savedKeys.length,
                   itemBuilder: (context, index) {
@@ -280,9 +304,9 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                       ),
                     );
                   },
-                ),
+                )
               ),
-            ),
+            )
 
           ],
         ),

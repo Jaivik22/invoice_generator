@@ -13,10 +13,10 @@ void main() async{
   await Hive.initFlutter();
 
   Hive.registerAdapter(InvoiceInfoAdapter());
-  await MobileAds.instance.initialize();
+  // await MobileAds.instance.initialize();
 
 
-  await Hive.openBox<InvoiceInfo>('invoiceBox');
+  // await Hive.openBox<InvoiceInfo>('invoiceBox');
   runApp(const MyApp());
 }
 
