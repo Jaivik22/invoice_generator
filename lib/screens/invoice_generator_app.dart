@@ -257,7 +257,19 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       logoPath: _logoFile != null ? _logoFile!.path : "",
     );
 
-    await saveInvoice(invoice,keyName);
+    final result = await saveInvoice(invoice, keyName);
+
+    if (result) {
+      print("Invoice saved successfully.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invoice saved successfully.')),
+      );
+    } else {
+      print("An invoice with this key already exists!");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please use diff key to save.')),
+      );
+    }
   }
 
   Future<void> _pickLogo() async {
@@ -269,9 +281,16 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     }
   }
 
-  Future<void> saveInvoice(InvoiceInfo info,String keyName) async {
+  Future<bool> saveInvoice(InvoiceInfo info, String keyName) async {
     final box = Hive.box<InvoiceInfo>('invoiceBox');
-    await box.put(keyName, info); // single record
+
+    if (box.containsKey(keyName)) {
+      // Key already exists, don’t overwrite
+      return false;
+    }
+
+    await box.put(keyName, info);
+    return true;
   }
 
   InvoiceInfo? loadInvoice() {
