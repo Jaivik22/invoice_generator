@@ -135,13 +135,16 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
               duration: const Duration(milliseconds: 500),
               child: ElevatedButton(
                 onPressed: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => const InvoiceHomePage(invoiceKey: null),
-                  //   ),
-                  // );
-                  adController.showOrLoadInterstitialAd(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const InvoiceHomePage(
+                        invoiceKey: "yourKeyHere",
+                        showInterstitialOnLoad: true,
+                      ),
+                    ),
+                  );
+                  // adController.showOrLoadInterstitialAd(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF349D78),
@@ -222,9 +225,13 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const InvoiceHomePage(invoiceKey: null),
+                                builder: (context) => const InvoiceHomePage(
+                                  invoiceKey: "yourKeyHere",
+                                  showInterstitialOnLoad: true,
+                                ),
                               ),
                             );
+
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF349D78),
@@ -296,7 +303,10 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => InvoiceHomePage(invoiceKey: key),
+                                builder: (context) => const InvoiceHomePage(
+                                  invoiceKey: "yourKeyHere",
+                                  showInterstitialOnLoad: true,
+                                ),
                               ),
                             );
                           },
@@ -326,7 +336,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
               ),
             ),
             const SizedBox(height: 4),
-            Obx(() => adController.getBannerAdWidget()),
+            Obx(() => adController.getBannerAdWidget1()),
           ],
         ),
       ),

@@ -37,7 +37,7 @@ class InvoiceGeneratorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -57,7 +57,8 @@ class InvoiceGeneratorApp extends StatelessWidget {
 
 class InvoiceHomePage extends StatefulWidget {
   final String? invoiceKey; // Add invoiceKey parameter
-  const InvoiceHomePage({super.key, this.invoiceKey});
+  final bool showInterstitialOnLoad;
+  const InvoiceHomePage({super.key, this.invoiceKey,    this.showInterstitialOnLoad = false,});
 
   @override
   _InvoiceHomePageState createState() => _InvoiceHomePageState();
@@ -66,6 +67,7 @@ class InvoiceHomePage extends StatefulWidget {
 class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingObserver{
 
   final AdController adController = Get.put(AdController());
+  bool _adFinished = false;
 
   final _formKey = GlobalKey<FormState>();
   String _selectedColor = 'Blue';
@@ -151,6 +153,21 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   void initState() {
     super.initState();
     // Initialize item controllers for the default item
+
+    if (widget.showInterstitialOnLoad) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        adController.showOrLoadInterstitialAd(
+          context,
+          onAdFinished: () {
+            setState(() {
+              _adFinished = true;
+            });
+          },
+        );
+      });
+    } else {
+      _adFinished = true;
+    }
     _itemControllers.add({
       'description': TextEditingController(),
       'quantity': TextEditingController(),
@@ -1184,9 +1201,15 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
 
   @override
   Widget build(BuildContext context) {
+    if (!_adFinished) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
-      bottomNavigationBar: Container(child:  Obx(() => adController.getBannerAdWidget()),),
+      // bottomNavigationBar: Container(child:  Obx(() => adController.getBannerAdWidget2()),),
       appBar: AppBar(
+        automaticallyImplyLeading: false, // 👈 removes the back button
         title: const Text(''),
         centerTitle: true,
         actions: [
@@ -1219,7 +1242,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                   label: const Text('Save',style: TextStyle(color: Color(0xFF2E8B77)),),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: 8,
                       vertical: 8,
                     ),
                     textStyle: const TextStyle(fontSize: 12),
@@ -1243,7 +1266,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                   label: const Text('Preview',style: TextStyle(color: Color(0xFF2E8B77)),),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: 8,
                       vertical: 8,
                     ),
                     textStyle: const TextStyle(fontSize: 12),
@@ -1266,7 +1289,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                   label: const Text('Share',style: TextStyle(color: Color(0xFF2E8B77)),),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: 8,
                       vertical: 8,
                     ),
                     textStyle: const TextStyle(fontSize: 12),
@@ -1301,7 +1324,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: 8,
                       vertical: 8,
                     ),
                     textStyle: const TextStyle(fontSize: 12),
@@ -1624,6 +1647,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                     ),
                   ),
                 ),
+                Obx(() => adController.getBannerAdWidget2()),
 
                 // Invoice Details
                 const SizedBox(height: 16),

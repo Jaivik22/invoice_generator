@@ -78,26 +78,30 @@ class AdController extends GetxController {
   StreamSubscription? _connectivitySubscription;
 
   Future<void> initialize() async {
-    preloadInterstitialAd();
-
     final prefs = await SharedPreferences.getInstance();
-    final isFirstLaunch = prefs.getBool('is_first_launch') ?? true;
+    int launchCount = prefs.getInt('launch_count') ?? 0;
 
-    if (isFirstLaunch) {
-      await prefs.setBool('is_first_launch', false);
-      print("First launch detected — skipping ad preload.");
+    launchCount += 1;
+    await prefs.setInt('launch_count', launchCount);
+
+    print("Launch count: $launchCount");
+
+    if (launchCount <= 2) {
+      print("Skipping ads — first or second launch.");
       return;
     }
 
-    // check internet status first
+    // Now proceed with ad logic
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity == ConnectivityResult.none) {
       print("No internet connection — waiting for internet to load ads.");
       listenForInternetAndLoadAds();
     } else {
-      await initializeAds();
+      await initializeAds(); // <- inside this you can call preloadInterstitialAd()
     }
   }
+
+
 
   Future<void> initializeAds() async {
     await AdUnits.loadFromRemoteConfig();
@@ -105,7 +109,8 @@ class AdController extends GetxController {
     preloadInterstitialAd();
     preloadRewardedAd();
     preloadNativeAd();
-    preloadBannerAd();
+    preloadBannerAd1();
+    preloadBannerAd2();
   }
 
   void listenForInternetAndLoadAds() {
@@ -119,19 +124,20 @@ class AdController extends GetxController {
   }
 
   void preloadInterstitialAd() {
-    final adUnitId = AdUnits.interstitial;
     if (isAdLoading.value || isAdLoaded.value) return;
+
     isAdLoading.value = true;
+
     InterstitialAd.load(
-      adUnitId: adUnitId,
+      adUnitId: AdUnits.interstitial,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
           isAdLoaded.value = true;
           isAdLoading.value = false;
-          _interstitialAd
-              ?.fullScreenContentCallback = FullScreenContentCallback(
+
+          ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
               isAdLoaded.value = false;
@@ -146,48 +152,50 @@ class AdController extends GetxController {
         },
         onAdFailedToLoad: (LoadAdError error) {
           isAdLoading.value = false;
+          isAdLoaded.value = false;
         },
       ),
     );
   }
 
-  void showOrLoadInterstitialAd(BuildContext context) {
-    final adUnitId = AdUnits.interstitial;
+  Future<bool> canShowAds() async {
+    final prefs = await SharedPreferences.getInstance();
+    int launchCount = prefs.getInt('launch_count') ?? 0;
+    return launchCount > 2;
+  }
 
-    void goToNextPage() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const InvoiceHomePage(invoiceKey: null),
-        ),
-      );
+  Future<void> showOrLoadInterstitialAd(BuildContext context, {required VoidCallback onAdFinished}) async {
+    if (!await canShowAds()) {
+    print("Skipping interstitial ad due to launch count");
+    // Directly continue your navigation or flow here since ad skipped
+    onAdFinished();
+    return;
     }
-
     if (isAdLoaded.value && _interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (ad) {
-          ad.dispose();
-          isAdLoaded.value = false;
-          preloadInterstitialAd();
-          goToNextPage();
-        },
-        onAdFailedToShowFullScreenContent: (ad, error) {
-          ad.dispose();
-          isAdLoaded.value = false;
-          preloadInterstitialAd();
-          goToNextPage();
-        },
-      );
-
-      _interstitialAd!.show();
-    } else {
-      if (Get.context == null) {
-        debugPrint('Cannot show dialog: no context available');
-        goToNextPage(); // fallback if no context
-        return;
+      try {
+        _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+          onAdDismissedFullScreenContent: (ad) {
+            ad.dispose();
+            isAdLoaded.value = false;
+            preloadInterstitialAd();
+            onAdFinished();
+          },
+          onAdFailedToShowFullScreenContent: (ad, error) {
+            ad.dispose();
+            isAdLoaded.value = false;
+            preloadInterstitialAd();
+            onAdFinished();
+          },
+        );
+        _interstitialAd!.show();
+        isAdLoaded.value = false;
+        _interstitialAd = null;
+      } catch (e) {
+        onAdFinished();
       }
-
-      Get.generalDialog(
+    } else {
+      showGeneralDialog(
+        context: context,
         barrierDismissible: false,
         barrierLabel: "Loading",
         pageBuilder: (context, animation, secondaryAnimation) {
@@ -196,13 +204,10 @@ class AdController extends GetxController {
             body: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: const [
                   CircularProgressIndicator(color: Colors.white),
                   SizedBox(height: 16),
-                  Text(
-                    "Loading Interstitial Ad...",
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  Text("Loading Interstitial Ad...", style: TextStyle(color: Colors.white)),
                 ],
               ),
             ),
@@ -210,38 +215,35 @@ class AdController extends GetxController {
         },
       );
 
-      isAdLoading.value = true;
-
       InterstitialAd.load(
-        adUnitId: adUnitId,
+        adUnitId: AdUnits.interstitial,
         request: const AdRequest(),
         adLoadCallback: InterstitialAdLoadCallback(
           onAdLoaded: (InterstitialAd ad) {
-            Get.back();
+            Navigator.of(context, rootNavigator: true).pop();
 
             ad.fullScreenContentCallback = FullScreenContentCallback(
               onAdDismissedFullScreenContent: (ad) {
                 ad.dispose();
-                isAdLoaded.value = false;
                 preloadInterstitialAd();
-                goToNextPage();
+                onAdFinished();
               },
               onAdFailedToShowFullScreenContent: (ad, error) {
                 ad.dispose();
-                isAdLoaded.value = false;
                 preloadInterstitialAd();
-                goToNextPage();
+                onAdFinished();
               },
             );
 
-            ad.show();
-            isAdLoaded.value = false;
-            isAdLoading.value = false;
+            try {
+              ad.show();
+            } catch (e) {
+              onAdFinished();
+            }
           },
           onAdFailedToLoad: (LoadAdError error) {
-            Get.back();
-            isAdLoading.value = false;
-            goToNextPage();
+            Navigator.of(context, rootNavigator: true).pop();
+            onAdFinished();
           },
         ),
       );
@@ -397,55 +399,79 @@ class AdController extends GetxController {
 
 
   final RxBool isBannerLoading = false.obs;
-  final RxBool isBannerLoaded = false.obs;
-  BannerAd? _bannerAd;
+  final RxBool isBanner1Loaded = false.obs;
+  final RxBool isBanner2Loaded = false.obs;
+  BannerAd? _bannerAd1;
+  BannerAd? _bannerAd2;
 
-  void preloadBannerAd({int retryCount = 0, int maxRetries = 3}) {
-    final adUnitId = AdUnits.banner;
-    if (isBannerLoading.value || isBannerLoaded.value || retryCount >= maxRetries) return;
-    isBannerLoading.value = true;
-    _bannerAd = BannerAd(
-      adUnitId: adUnitId,
+
+  void preloadBannerAd1() {
+    if (isBanner1Loaded.value) return;
+
+    _bannerAd1 = BannerAd(
+      adUnitId: AdUnits.banner,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (Ad ad) {
-          print('Banner Ad loaded');
-          isBannerLoaded.value = true;
-          isBannerLoading.value = false;
-        },
+        onAdLoaded: (Ad ad) => isBanner1Loaded.value = true,
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          print('Banner Ad failed to load: ${error.code} - ${error.message}');
           ad.dispose();
-          isBannerLoading.value = false;
-          Future.delayed(Duration(seconds: 5), () {
-            preloadBannerAd(retryCount: retryCount + 1);
-          });
+          isBanner1Loaded.value = false;
         },
-        onAdOpened: (Ad ad) => print('Banner Ad opened'),
-        onAdImpression: (Ad ad) => print('Banner Ad impression'),
       ),
     )..load();
   }
 
-  Widget getBannerAdWidget() {
-    if (isBannerLoaded.value && _bannerAd != null) {
+  void preloadBannerAd2() {
+    if (isBanner2Loaded.value) return;
+
+    _bannerAd2 = BannerAd(
+      adUnitId: AdUnits.banner,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) => isBanner2Loaded.value = true,
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+          isBanner2Loaded.value = false;
+        },
+      ),
+    )..load();
+  }
+
+
+  Widget getBannerAdWidget1() {
+    if (isBanner1Loaded.value && _bannerAd1 != null) {
       return Container(
         alignment: Alignment.center,
-        width: _bannerAd!.size.width.toDouble(),
-        height: _bannerAd!.size.height.toDouble(),
-        child: AdWidget(ad: _bannerAd!),
+        width: _bannerAd1!.size.width.toDouble(),
+        height: _bannerAd1!.size.height.toDouble(),
+        child: AdWidget(ad: _bannerAd1!),
       );
     }
     return SizedBox.shrink();
   }
+
+  Widget getBannerAdWidget2() {
+    if (isBanner2Loaded.value && _bannerAd2 != null) {
+      return Container(
+        alignment: Alignment.center,
+        width: _bannerAd2!.size.width.toDouble(),
+        height: _bannerAd2!.size.height.toDouble(),
+        child: AdWidget(ad: _bannerAd2!),
+      );
+    }
+    return SizedBox.shrink();
+  }
+
 
   @override
   void onClose() {
     _interstitialAd?.dispose();
     _rewardedAd?.dispose();
     _nativeAd?.dispose();
-    _bannerAd?.dispose(); // Added banner ad disposal
+    _bannerAd1?.dispose(); // Added banner ad disposal
+    _bannerAd2?.dispose(); // Added banner ad disposal
     _connectivitySubscription?.cancel();
     super.onClose();
   }
