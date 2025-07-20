@@ -277,12 +277,12 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     final result = await saveInvoice(invoice, keyName);
 
     if (result) {
-      print("Invoice saved successfully.");
+      // print("Invoice saved successfully.");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invoice saved successfully.')),
       );
     } else {
-      print("An invoice with this key already exists!");
+      // print("An invoice with this key already exists!");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please use diff key to save.')),
       );
@@ -302,8 +302,13 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     final box = Hive.box<InvoiceInfo>('invoiceBox');
 
     if (box.containsKey(keyName)) {
-      // Key already exists, don’t overwrite
-      return false;
+      if(widget.invoiceKey != null &&
+          widget.invoiceKey!.isNotEmpty){
+        await box.put(keyName, info);
+        return true;
+      }else {
+        return false;
+      }
     }
 
     await box.put(keyName, info);
@@ -1176,13 +1181,13 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
 
     await file.writeAsBytes(await pdf.save());
 
-    // // Optionally open the file
-    // await OpenFile.open(file.path);
-    print('PDF saved to ${file.path}');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('PDF saved to ${file.path}')),
+    final snackBar = SnackBar(
+      content: Text('PDF saved to ${file.path}'),
     );
+
+    await ScaffoldMessenger.of(context).showSnackBar(snackBar).closed;
     await OpenFile.open(file.path);
+
 
   }
 
@@ -1225,11 +1230,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                       if (widget.invoiceKey != null &&
                           widget.invoiceKey!.isNotEmpty) {
                         _saveInfo(widget.invoiceKey!);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Information saved')),
-                        );
                       } else {
-                        print("showKeyNameDialog");
                         showKeyNameDialog(context);
                       }
                     } else {
@@ -1443,7 +1444,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                             onChanged: (value) {
                               setState(() {
                                 _selectedCurrency = value!;
-                                print("_selectedCurrency" + _selectedCurrency);
+                                // print("_selectedCurrency" + _selectedCurrency);
                               });
                             },
                           ),

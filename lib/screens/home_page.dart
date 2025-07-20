@@ -45,8 +45,6 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
 
 
     } catch (e) {
-      // Handle errors (e.g., show error screen or retry)
-      print('Initialization error: $e');
     }
   }
 
@@ -54,7 +52,6 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       adController.checkAndLoadAdsIfNeeded();
-      print("internet is back");
     }
   }
 
@@ -74,7 +71,6 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)!);
-    print('didChangeDependencies');
   }
 
   @override
@@ -139,7 +135,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                     context,
                     MaterialPageRoute(
                       builder: (context) => const InvoiceHomePage(
-                        invoiceKey: "yourKeyHere",
+                        invoiceKey: "",
                         showInterstitialOnLoad: true,
                       ),
                     ),
@@ -226,7 +222,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const InvoiceHomePage(
-                                  invoiceKey: "yourKeyHere",
+                                  invoiceKey: "",
                                   showInterstitialOnLoad: true,
                                 ),
                               ),
@@ -303,8 +299,8 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const InvoiceHomePage(
-                                  invoiceKey: "yourKeyHere",
+                                builder: (context) => InvoiceHomePage(
+                                  invoiceKey: key,
                                   showInterstitialOnLoad: true,
                                 ),
                               ),

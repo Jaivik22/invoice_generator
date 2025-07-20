@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -9,44 +10,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../screens/invoice_generator_app.dart';
 
-class AdUnits {
-  static const String interstitialTest = 'ca-app-pub-3940256099942544/1033173712';
-  static const String rewardedTest = 'ca-app-pub-3940256099942544/5224354917';
-  static const String nativeTest = 'ca-app-pub-3940256099942544/2247696110';
-  static const String bannerTest = 'ca-app-pub-3940256099942544/6300978111'; // Banner test ID
-  static String interstitial = interstitialTest;
-  static String rewarded = rewardedTest;
-  static String native = nativeTest;
-  static String banner = bannerTest;
+class AdmobKeys {
+  final String banner;
+  final String banner2;
+  final String interstitial;
+  final String rewarded;
 
-  static Future<void> loadFromRemoteConfig() async {
-    try {
-      final remoteConfig = FirebaseRemoteConfig.instance;
-      await remoteConfig.setConfigSettings(
-        RemoteConfigSettings(
-          fetchTimeout: Duration(seconds: 10),
-          minimumFetchInterval: Duration(hours: 1),
-        ),
-      );
-      await remoteConfig.fetchAndActivate();
-      final jsonString = remoteConfig.getString('ad_units');
-      if (jsonString.isEmpty) return;
-      final Map<String, dynamic> adUnitsMap = jsonDecode(jsonString);
-      interstitial = _safeId(adUnitsMap['interstitial'], interstitialTest);
-      rewarded = _safeId(adUnitsMap['rewarded'], rewardedTest);
-      native = _safeId(adUnitsMap['native'], nativeTest);
-      banner = _safeId(adUnitsMap['banner'], bannerTest);
-    } catch (e) {
-      print('Failed to load Remote Config: $e');
-    }
-  }
-
-  static String _safeId(String? id, String fallback) {
-    if (id == null || id.isEmpty) return fallback;
-    if (id.startsWith('ca-app-pub-') && id.length > 20) return id;
-    return fallback;
-  }
+  AdmobKeys({
+    required this.banner,
+    required this.banner2,
+    required this.interstitial,
+    required this.rewarded,
+  });
 }
+
 
 class AdController extends GetxController {
   InterstitialAd? _interstitialAd;
@@ -58,6 +35,7 @@ class AdController extends GetxController {
   final RxBool isRewardedLoaded = false.obs;
   final RxBool isNativeLoading = false.obs;
   final RxBool isNativeLoaded = false.obs;
+  AdmobKeys? keys;
   @override
   void onInit() {
     super.onInit();
@@ -73,7 +51,36 @@ class AdController extends GetxController {
     });
   }
 
+  Future<AdmobKeys?> fetchAdmobKeys() async {
+    try {
+      CollectionReference keysCollection =
+      FirebaseFirestore.instance.collection('Admob keys');
+      QuerySnapshot snapshot = await keysCollection.limit(1).get();
 
+      print("Total Docs: ${snapshot.docs.length}");
+      print("Docs: ${snapshot.docs.map((e) => e.id).toList()}");
+
+
+      if (snapshot.docs.isEmpty) {
+        print('No Admob keys found');
+        return null;
+      }
+
+      Map<String, dynamic> data =
+      snapshot.docs.first.data() as Map<String, dynamic>;
+
+      print("Admob Keys ${data}");
+      return AdmobKeys(
+          banner: data['Banner01'] ?? '',
+          interstitial: data['Interstitial01'] ?? '',
+          rewarded: data['Rewarded01'] ?? '',
+          banner2: data['Banner02'] ?? ''
+      );
+    } catch (e) {
+      print('Error fetching Admob keys: $e');
+      return null;
+    }
+  }
 
   StreamSubscription? _connectivitySubscription;
 
@@ -84,31 +91,25 @@ class AdController extends GetxController {
     launchCount += 1;
     await prefs.setInt('launch_count', launchCount);
 
-    print("Launch count: $launchCount");
-
     if (launchCount <= 2) {
-      print("Skipping ads — first or second launch.");
       return;
     }
 
     // Now proceed with ad logic
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity == ConnectivityResult.none) {
-      print("No internet connection — waiting for internet to load ads.");
       listenForInternetAndLoadAds();
     } else {
       await initializeAds(); // <- inside this you can call preloadInterstitialAd()
     }
   }
 
-
-
   Future<void> initializeAds() async {
-    await AdUnits.loadFromRemoteConfig();
+    keys =await fetchAdmobKeys();
     await MobileAds.instance.initialize();
     preloadInterstitialAd();
     preloadRewardedAd();
-    preloadNativeAd();
+    // preloadNativeAd();
     preloadBannerAd1();
     preloadBannerAd2();
   }
@@ -116,7 +117,7 @@ class AdController extends GetxController {
   void listenForInternetAndLoadAds() {
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((status) {
       if (status != ConnectivityResult.none) {
-        print("Internet available — loading ads.");
+        // print("Internet available — loading ads.");
         _connectivitySubscription?.cancel(); // stop listening once internet is back
         initializeAds();
       }
@@ -129,7 +130,7 @@ class AdController extends GetxController {
     isAdLoading.value = true;
 
     InterstitialAd.load(
-      adUnitId: AdUnits.interstitial,
+      adUnitId: keys!=null?keys!.interstitial:"",
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
@@ -166,7 +167,7 @@ class AdController extends GetxController {
 
   Future<void> showOrLoadInterstitialAd(BuildContext context, {required VoidCallback onAdFinished}) async {
     if (!await canShowAds()) {
-    print("Skipping interstitial ad due to launch count");
+    // print("Skipping interstitial ad due to launch count");
     // Directly continue your navigation or flow here since ad skipped
     onAdFinished();
     return;
@@ -216,7 +217,7 @@ class AdController extends GetxController {
       );
 
       InterstitialAd.load(
-        adUnitId: AdUnits.interstitial,
+        adUnitId: keys!=null?keys!.interstitial:"",
         request: const AdRequest(),
         adLoadCallback: InterstitialAdLoadCallback(
           onAdLoaded: (InterstitialAd ad) {
@@ -251,7 +252,7 @@ class AdController extends GetxController {
   }
 
   void preloadRewardedAd({int retryCount = 0, int maxRetries = 3}) {
-    final adUnitId = AdUnits.rewarded;
+    final adUnitId =  keys!=null?keys!.rewarded:"";
     if (isRewardedLoading.value || isRewardedLoaded.value || retryCount >= maxRetries) return;
     isRewardedLoading.value = true;
     RewardedAd.load(
@@ -276,7 +277,7 @@ class AdController extends GetxController {
           );
         },
         onAdFailedToLoad: (LoadAdError error) {
-          print('Rewarded Ad failed to load: ${error.code} - ${error.message}');
+          // print('Rewarded Ad failed to load: ${error.code} - ${error.message}');
           isRewardedLoading.value = false;
           Future.delayed(Duration(seconds: 5), () {
             preloadRewardedAd(retryCount: retryCount + 1);
@@ -287,17 +288,17 @@ class AdController extends GetxController {
   }
 
   void showOrLoadRewardedAd({required VoidCallback onRewarded, int retryCount = 0, int maxRetries = 3}) {
-    final adUnitId = AdUnits.rewarded;
+    final adUnitId =  keys!=null?keys!.rewarded:"";
     if (isRewardedLoaded.value && _rewardedAd != null) {
       _rewardedAd!.show(
         onUserEarnedReward: (ad, reward) {
-          print('User earned reward: ${reward.amount} ${reward.type}');
+          // print('User earned reward: ${reward.amount} ${reward.type}');
           onRewarded();
         },
       );
     } else if (retryCount < maxRetries) {
       if (Get.context == null) {
-        debugPrint('Cannot show dialog: no context available');
+        // debugPrint('Cannot show dialog: no context available');
         onRewarded(); // fallback if no context
         return;
       }
@@ -342,7 +343,7 @@ class AdController extends GetxController {
             );
             ad.show(
               onUserEarnedReward: (ad, reward) {
-                print('User earned reward: ${reward.amount} ${reward.type}');
+                // print('User earned reward: ${reward.amount} ${reward.type}');
                 onRewarded();
               },
             );
@@ -350,13 +351,13 @@ class AdController extends GetxController {
             isRewardedLoading.value = false;
           },
             onAdFailedToLoad: (LoadAdError error) {
-              print('Rewarded Ad failed to load: ${error.code} - ${error.message}');
+              // print('Rewarded Ad failed to load: ${error.code} - ${error.message}');
               Get.back();
               isRewardedLoading.value = false;
 
               if (retryCount + 1 >= maxRetries) {
                 // Max retries reached → proceed anyway
-                print("Max retries reached. Proceeding without ad.");
+                // print("Max retries reached. Proceeding without ad.");
                 onRewarded();
               } else {
                 Future.delayed(Duration(seconds: 5), () {
@@ -374,48 +375,52 @@ class AdController extends GetxController {
   }
 
 
-  void preloadNativeAd() {
-    final adUnitId = AdUnits.native;
-    if (isNativeLoading.value || isNativeLoaded.value) return;
-    isNativeLoading.value = true;
-    _nativeAd = NativeAd(
-      adUnitId: adUnitId,
-      factoryId: 'listTile',
-      request: const AdRequest(),
-      listener: NativeAdListener(
-        onAdLoaded: (ad) {
-          isNativeLoaded.value = true;
-          isNativeLoading.value = false;
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-          isNativeLoading.value = false;
-        },
-      ),
-    )..load();
-  }
+  // void preloadNativeAd() {
+  //   final adUnitId = AdUnits.native;
+  //   if (isNativeLoading.value || isNativeLoaded.value) return;
+  //   isNativeLoading.value = true;
+  //   _nativeAd = NativeAd(
+  //     adUnitId: adUnitId,
+  //     factoryId: 'listTile',
+  //     request: const AdRequest(),
+  //     listener: NativeAdListener(
+  //       onAdLoaded: (ad) {
+  //         isNativeLoaded.value = true;
+  //         isNativeLoading.value = false;
+  //       },
+  //       onAdFailedToLoad: (ad, error) {
+  //         ad.dispose();
+  //         isNativeLoading.value = false;
+  //       },
+  //     ),
+  //   )..load();
+  // }
 
   NativeAd? get nativeAd => _nativeAd;
-
 
   final RxBool isBannerLoading = false.obs;
   final RxBool isBanner1Loaded = false.obs;
   final RxBool isBanner2Loaded = false.obs;
-  BannerAd? _bannerAd1;
-  BannerAd? _bannerAd2;
+  BannerAd? bannerAd1;
+  BannerAd? bannerAd2;
 
+  final GlobalKey banner1Key = GlobalKey();
+  final GlobalKey banner2Key = GlobalKey();
 
   void preloadBannerAd1() {
-    if (isBanner1Loaded.value) return;
+    if (isBanner1Loaded.value || bannerAd1 != null) return;
 
-    _bannerAd1 = BannerAd(
-      adUnitId: AdUnits.banner,
+    bannerAd1 = BannerAd(
+      adUnitId: keys?.banner ?? "",
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (Ad ad) => isBanner1Loaded.value = true,
+        onAdLoaded: (Ad ad) {
+          isBanner1Loaded.value = true;
+        },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           ad.dispose();
+          bannerAd1 = null;
           isBanner1Loaded.value = false;
         },
       ),
@@ -423,46 +428,65 @@ class AdController extends GetxController {
   }
 
   void preloadBannerAd2() {
-    if (isBanner2Loaded.value) return;
+    if (isBanner2Loaded.value || bannerAd2 != null) return;
 
-    _bannerAd2 = BannerAd(
-      adUnitId: AdUnits.banner,
+    bannerAd2 = BannerAd(
+      adUnitId: keys?.banner2 ?? "",
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (Ad ad) => isBanner2Loaded.value = true,
+        onAdLoaded: (Ad ad) {
+          isBanner2Loaded.value = true;
+        },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           ad.dispose();
+          bannerAd2 = null;
           isBanner2Loaded.value = false;
         },
       ),
     )..load();
   }
 
-
   Widget getBannerAdWidget1() {
-    if (isBanner1Loaded.value && _bannerAd1 != null) {
+    if (isBanner1Loaded.value && bannerAd1 != null) {
       return Container(
+        key: banner1Key, // Add unique key
         alignment: Alignment.center,
-        width: _bannerAd1!.size.width.toDouble(),
-        height: _bannerAd1!.size.height.toDouble(),
-        child: AdWidget(ad: _bannerAd1!),
+        width: bannerAd1!.size.width.toDouble(),
+        height: bannerAd1!.size.height.toDouble(),
+        child: AdWidget(ad: bannerAd1!),
       );
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 
   Widget getBannerAdWidget2() {
-    if (isBanner2Loaded.value && _bannerAd2 != null) {
+    if (isBanner2Loaded.value && bannerAd2 != null) {
       return Container(
+        key: banner2Key, // Add unique key
         alignment: Alignment.center,
-        width: _bannerAd2!.size.width.toDouble(),
-        height: _bannerAd2!.size.height.toDouble(),
-        child: AdWidget(ad: _bannerAd2!),
+        width: bannerAd2!.size.width.toDouble(),
+        height: bannerAd2!.size.height.toDouble(),
+        child: AdWidget(ad: bannerAd2!),
       );
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
+  // Method to refresh ads if needed
+  void refreshBannerAd1() {
+    bannerAd1?.dispose();
+    bannerAd1 = null;
+    isBanner1Loaded.value = false;
+    preloadBannerAd1();
+  }
+
+  void refreshBannerAd2() {
+    bannerAd2?.dispose();
+    bannerAd2 = null;
+    isBanner2Loaded.value = false;
+    preloadBannerAd2();
+  }
+
 
 
   @override
@@ -470,8 +494,8 @@ class AdController extends GetxController {
     _interstitialAd?.dispose();
     _rewardedAd?.dispose();
     _nativeAd?.dispose();
-    _bannerAd1?.dispose(); // Added banner ad disposal
-    _bannerAd2?.dispose(); // Added banner ad disposal
+    bannerAd1?.dispose(); // Added banner ad disposal
+    bannerAd2?.dispose();  // Added banner ad disposal
     _connectivitySubscription?.cancel();
     super.onClose();
   }
