@@ -54,7 +54,7 @@ class AdController extends GetxController {
   Future<AdmobKeys?> fetchAdmobKeys() async {
     try {
       CollectionReference keysCollection =
-      FirebaseFirestore.instance.collection('Admob keys');
+      FirebaseFirestore.instance.collection('admob_keys');
       QuerySnapshot snapshot = await keysCollection.limit(1).get();
 
       print("Total Docs: ${snapshot.docs.length}");
