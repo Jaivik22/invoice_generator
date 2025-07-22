@@ -110,6 +110,8 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   String _yourName = '';
   String _companyCityStateZip = '';
   String _companyCountry = '';
+  String _taxId = '';
+
   String _clientCompany = '';
 
   // String _clientAddress = '';
@@ -137,6 +139,9 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       TextEditingController();
   final TextEditingController _companyCountryController =
       TextEditingController();
+  final TextEditingController _taxIdController =
+      TextEditingController();
+
   final TextEditingController _clientCompanyController =
       TextEditingController();
   final TextEditingController _clientCityStateZipController =
@@ -198,6 +203,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     _yourNameController.dispose();
     _companyCityStateZipController.dispose();
     _companyCountryController.dispose();
+    _taxIdController.dispose();
     _clientCompanyController.dispose();
     _clientCityStateZipController.dispose();
     _clientCountryController.dispose();
@@ -222,6 +228,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       _yourName = loaded.yourName;
       _companyCityStateZip = loaded.clientCityStateZip;
       _companyCountry = loaded.companyCountry;
+      _taxId = loaded.taxId;
       _clientCompany = loaded.clientCompany;
       _clientCityStateZip = loaded.clientCityStateZip;
       _clientCountry = loaded.clientCountry;
@@ -246,6 +253,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       _yourNameController.text = _yourName;
       _companyCityStateZipController.text = _companyCityStateZip;
       _companyCountryController.text = _companyCountry;
+      _taxIdController.text = _taxId;
       _clientCompanyController.text = _clientCompany;
       _clientCityStateZipController.text = _clientCityStateZip;
       _clientCountryController.text = _clientCountry;
@@ -272,6 +280,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       currency: _selectedCurrency,
       taxPercentage: _taxPercentage,
       logoPath: _logoFile != null ? _logoFile!.path : "",
+      taxId: _taxId
     );
 
     final result = await saveInvoice(invoice, keyName);
@@ -416,101 +425,255 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   }
 
   List<pw.Widget> _buildProfessionalLayout(
-    Color themeColor,
-    pw.MemoryImage? logoImage,
-    pw.Font robotoFont,
-  ) {
+      Color themeColor,
+      pw.MemoryImage? logoImage,
+      pw.Font robotoFont,
+      ) {
     return [
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            logoImage != null
-                ? pw.Image(logoImage, width: 100, height: 100)
-                : pw.SizedBox(width: 100, height: 100),
-            pw.Column(
-              children: [
-                pw.Container(
-                  color: PdfColor.fromInt(themeColor.value),
-                  padding: const pw.EdgeInsets.all(16),
-                  child: pw.Text(
-                    'INVOICE',
-                    style: pw.TextStyle(
-                      fontSize: 24,
-                      color: PdfColors.white,
-                      fontWeight: pw.FontWeight.bold,
-                      font: robotoFont,
-                    ),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          logoImage != null
+              ? pw.Image(logoImage, width: 100, height: 100)
+              : pw.SizedBox(width: 100, height: 100),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Container(
+                color: PdfColor.fromInt(themeColor.value),
+                padding: const pw.EdgeInsets.all(16),
+                child: pw.Text(
+                  'INVOICE',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    color: PdfColors.white,
+                    fontWeight: pw.FontWeight.bold,
+                    font: robotoFont,
                   ),
                 ),
-                pw.SizedBox(height: 5),
-                pw.Text(
-                  'Invoice #$_invoiceNumber',
-                  style: pw.TextStyle(fontSize: 14, font: robotoFont),
+              ),
+              pw.SizedBox(height: 5),
+              pw.Text(
+                'Invoice #$_invoiceNumber',
+                style: pw.TextStyle(fontSize: 14, font: robotoFont),
+              ),
+              pw.Text(
+                'GST/Tax Number: $_taxId',
+                style: pw.TextStyle(fontSize: 14, font: robotoFont),
+              ),
+            ],
+          ),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+      pw.Text(
+        'From:',
+        style: pw.TextStyle(
+          fontSize: 16,
+          fontWeight: pw.FontWeight.bold,
+          font: robotoFont,
+        ),
+      ),
+      pw.Text(_businessName, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_businessAddress, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_companyCityStateZip, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_companyCountry, style: pw.TextStyle(font: robotoFont)),
+      pw.SizedBox(height: 20),
+      pw.Text(
+        'Bill to:',
+        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: robotoFont),
+      ),
+      pw.Text(_clientCompany, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientCityStateZip, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientCountry, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientEmail, style: pw.TextStyle(font: robotoFont)),
+      pw.SizedBox(height: 20),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            'Invoice Date: $_invoiceDate',
+            style: pw.TextStyle(font: robotoFont),
+          ),
+          pw.Text(
+            'Due Date: $_dueDate',
+            style: pw.TextStyle(font: robotoFont),
+          ),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+      pw.Table.fromTextArray(
+        headers: ['Description', 'Quantity', 'Price', 'Total'],
+        headerStyle: pw.TextStyle(
+          font: robotoFont,
+          fontWeight: pw.FontWeight.bold,
+        ),
+        cellStyle: pw.TextStyle(font: robotoFont),
+        data:
+        _items
+            .map(
+              (item) => [
+            item['description'],
+            item['quantity'].toString(),
+            '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
+            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+          ],
+        )
+            .toList(),
+      ),
+      pw.SizedBox(height: 20),
+      pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
+            style: pw.TextStyle(fontSize: 14, font: robotoFont),
+          ),
+          pw.Text(
+            'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
+            style: pw.TextStyle(fontSize: 14, font: robotoFont),
+          ),
+          pw.Text(
+            'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+            style: pw.TextStyle(
+              fontSize: 16,
+              fontWeight: pw.FontWeight.bold,
+              font: robotoFont,
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  //
+  List<pw.Widget> _buildModernLayout(
+      Color themeColor,
+      pw.MemoryImage? logoImage,
+      pw.Font robotoFont,
+      ) {
+    return [
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          logoImage != null
+              ? pw.Image(logoImage, width: 80, height: 80)
+              : pw.SizedBox(width: 80, height: 80),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                'INVOICE',
+                style: pw.TextStyle(
+                  fontSize: 28,
+                  color: PdfColor.fromInt(themeColor.value),
+                  fontWeight: pw.FontWeight.bold,
+                  font: robotoFont,
                 ),
-              ],
-            ),
-          ],
-        ),
-        pw.SizedBox(height: 20),
-        pw.Text(
-          'From:',
-          style: pw.TextStyle(
-            fontSize: 16,
-            fontWeight: pw.FontWeight.bold,
-            font: robotoFont,
+              ),
+              pw.SizedBox(height: 5),
+              pw.Text(
+                'Invoice #$_invoiceNumber',
+                style: pw.TextStyle(fontSize: 14, font: robotoFont),
+              ),
+              pw.Text(
+                'GST/Tax Number: $_taxId',
+                style: pw.TextStyle(fontSize: 14, font: robotoFont),
+              ),
+            ],
           ),
-        ),
-        pw.Text(_businessName, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_businessAddress, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_companyCityStateZip, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_companyCountry, style: pw.TextStyle(font: robotoFont)),
-        pw.SizedBox(height: 20),
-        pw.Text(
-          'Bill to:',
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: robotoFont),
-        ),
-        pw.Text(_clientCompany, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_clientCityStateZip, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_clientCountry, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_clientEmail, style: pw.TextStyle(font: robotoFont)),
-        pw.SizedBox(height: 20),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text(
-              'Invoice Date: $_invoiceDate',
-              style: pw.TextStyle(font: robotoFont),
-            ),
-            pw.Text(
-              'Due Date: $_dueDate',
-              style: pw.TextStyle(font: robotoFont),
-            ),
-          ],
-        ),
-        pw.SizedBox(height: 20),
-        pw.Table.fromTextArray(
-          headers: ['Description', 'Quantity', 'Price', 'Total'],
-          headerStyle: pw.TextStyle(
-            font: robotoFont,
-            fontWeight: pw.FontWeight.bold,
+        ],
+      ),
+      pw.SizedBox(height: 20),
+      pw.Divider(color: PdfColor.fromInt(themeColor.value)),
+      pw.SizedBox(height: 20),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'From:',
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  font: robotoFont,
+                ),
+              ),
+              pw.Text(_businessName, style: pw.TextStyle(font: robotoFont)),
+              pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
+              pw.Text(
+                _businessAddress,
+                style: pw.TextStyle(font: robotoFont),
+              ),
+              pw.Text(
+                _companyCityStateZip,
+                style: pw.TextStyle(font: robotoFont),
+              ),
+              pw.Text(_companyCountry, style: pw.TextStyle(font: robotoFont)),
+            ],
           ),
-          cellStyle: pw.TextStyle(font: robotoFont),
-          data:
-              _items
-                  .map(
-                    (item) => [
-                      item['description'],
-                      item['quantity'].toString(),
-                      '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
-                      '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-                    ],
-                  )
-                  .toList(),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                'Bill to:',
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  font: robotoFont,
+                ),
+              ),
+              pw.Text(_clientCompany, style: pw.TextStyle(font: robotoFont)),
+              pw.Text(
+                _clientCityStateZip,
+                style: pw.TextStyle(font: robotoFont),
+              ),
+              pw.Text(_clientCountry, style: pw.TextStyle(font: robotoFont)),
+              pw.Text(_clientEmail, style: pw.TextStyle(font: robotoFont)),
+            ],
+          ),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            'Invoice Date: $_invoiceDate',
+            style: pw.TextStyle(font: robotoFont),
+          ),
+          pw.Text(
+            'Due Date: $_dueDate',
+            style: pw.TextStyle(font: robotoFont),
+          ),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+      pw.Table.fromTextArray(
+        headers: ['Item', 'Qty', 'Price', 'Total'],
+        headerStyle: pw.TextStyle(
+          font: robotoFont,
+          fontWeight: pw.FontWeight.bold,
         ),
-        pw.SizedBox(height: 20),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
+        cellStyle: pw.TextStyle(font: robotoFont),
+        data:
+        _items
+            .map(
+              (item) => [
+            item['description'],
+            item['quantity'].toString(),
+            '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
+            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+          ],
+        )
+            .toList(),
+      ),
+      pw.SizedBox(height: 20),
+      pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
             pw.Text(
               'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
@@ -523,543 +686,406 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             pw.Text(
               'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
               style: pw.TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: pw.FontWeight.bold,
                 font: robotoFont,
               ),
             ),
           ],
         ),
-    ];
-  }
-
-  //
-  List<pw.Widget> _buildModernLayout(
-    Color themeColor,
-    pw.MemoryImage? logoImage,
-    pw.Font robotoFont,
-  ) {
-    return [
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            logoImage != null
-                ? pw.Image(logoImage, width: 80, height: 80)
-                : pw.SizedBox(width: 80, height: 80),
-            pw.Column(
-              children: [
-                pw.Text(
-                  'INVOICE',
-                  style: pw.TextStyle(
-                    fontSize: 28,
-                    color: PdfColor.fromInt(themeColor.value),
-                    fontWeight: pw.FontWeight.bold,
-                    font: robotoFont,
-                  ),
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text(
-                  'Invoice #$_invoiceNumber',
-                  style: pw.TextStyle(fontSize: 14, font: robotoFont),
-                ),
-              ],
-            ),
-          ],
-        ),
-        // pw.SizedBox(height: 10),
-        // pw.Text('Invoice #$_invoiceNumber', style: const pw.TextStyle(fontSize: 14)),
-        pw.SizedBox(height: 20),
-        pw.Divider(color: PdfColor.fromInt(themeColor.value)),
-        pw.SizedBox(height: 20),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  'From:',
-                  style: pw.TextStyle(
-                    fontWeight: pw.FontWeight.bold,
-                    font: robotoFont,
-                  ),
-                ),
-                pw.Text(_businessName, style: pw.TextStyle(font: robotoFont)),
-                pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
-                pw.Text(
-                  _businessAddress,
-                  style: pw.TextStyle(font: robotoFont),
-                ),
-                pw.Text(
-                  _companyCityStateZip,
-                  style: pw.TextStyle(font: robotoFont),
-                ),
-                pw.Text(_companyCountry, style: pw.TextStyle(font: robotoFont)),
-              ],
-            ),
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                pw.Text(
-                  'Bill to:',
-                  style: pw.TextStyle(
-                    fontWeight: pw.FontWeight.bold,
-                    font: robotoFont,
-                  ),
-                ),
-                pw.Text(_clientCompany, style: pw.TextStyle(font: robotoFont)),
-                pw.Text(
-                  _clientCityStateZip,
-                  style: pw.TextStyle(font: robotoFont),
-                ),
-                pw.Text(_clientCountry, style: pw.TextStyle(font: robotoFont)),
-                pw.Text(_clientEmail, style: pw.TextStyle(font: robotoFont)),
-              ],
-            ),
-          ],
-        ),
-        pw.SizedBox(height: 20),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text(
-              'Invoice Date: $_invoiceDate',
-              style: pw.TextStyle(font: robotoFont),
-            ),
-            pw.Text(
-              'Due Date: $_dueDate',
-              style: pw.TextStyle(font: robotoFont),
-            ),
-          ],
-        ),
-        pw.SizedBox(height: 20),
-        pw.Table.fromTextArray(
-          headers: ['Item', 'Qty', 'Price', 'Total'],
-          headerStyle: pw.TextStyle(
-            font: robotoFont,
-            fontWeight: pw.FontWeight.bold,
-          ),
-          cellStyle: pw.TextStyle(font: robotoFont),
-          data:
-              _items
-                  .map(
-                    (item) => [
-                      item['description'],
-                      item['quantity'].toString(),
-                      '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
-                      '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-                    ],
-                  )
-                  .toList(),
-        ),
-        pw.SizedBox(height: 20),
-        pw.Align(
-          alignment: pw.Alignment.centerRight,
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.end,
-            children: [
-              pw.Text(
-                'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, font: robotoFont),
-              ),
-              pw.Text(
-                'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, font: robotoFont),
-              ),
-              pw.Text(
-                'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
-                style: pw.TextStyle(
-                  fontSize: 18,
-                  fontWeight: pw.FontWeight.bold,
-                  font: robotoFont,
-                ),
-              ),
-            ],
-          ),
-        ),
+      ),
     ];
   }
 
   List<pw.Widget> _buildMinimalLayout(
-    Color themeColor,
-    pw.MemoryImage? logoImage,
-    pw.Font robotoFont,
-  ) {
+      Color themeColor,
+      pw.MemoryImage? logoImage,
+      pw.Font robotoFont,
+      ) {
     return [
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            logoImage != null
-                ? pw.Image(logoImage, width: 60, height: 60)
-                : pw.SizedBox(width: 60, height: 60),
-            pw.Column(
-              children: [
-                pw.Text(
-                  'INVOICE',
-                  style: pw.TextStyle(
-                    fontSize: 20,
-                    color: PdfColor.fromInt(themeColor.value),
-                    font: robotoFont,
-                  ),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          logoImage != null
+              ? pw.Image(logoImage, width: 60, height: 60)
+              : pw.SizedBox(width: 60, height: 60),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                'INVOICE',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  color: PdfColor.fromInt(themeColor.value),
+                  font: robotoFont,
                 ),
-                pw.SizedBox(height: 5),
-                pw.Text(
-                  'Invoice #$_invoiceNumber',
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-              ],
-            ),
-          ],
-        ),
-        // pw.SizedBox(height: 10),
-        // pw.Text('Invoice #$_invoiceNumber', style: const pw.TextStyle(fontSize: 12)),
-        pw.SizedBox(height: 20),
-        pw.Text(
-          'From:',
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: robotoFont),
-        ),
-        pw.Text(_businessName, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_businessAddress, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_companyCityStateZip, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_companyCountry, style: pw.TextStyle(font: robotoFont)),
-        pw.SizedBox(height: 10),
-        pw.Text(
-          'Bill to:',
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: robotoFont),
-        ),
-        pw.Text(_clientCompany, style: pw.TextStyle(font: robotoFont)),
-        // pw.Text(_clientName),
-        // pw.Text(_clientAddress),
-        pw.Text(_clientCityStateZip, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_clientCountry, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_clientEmail, style: pw.TextStyle(font: robotoFont)),
-        pw.SizedBox(height: 20),
-        pw.Text(
-          'Invoice Date: $_invoiceDate',
-          style: pw.TextStyle(font: robotoFont),
-        ),
-        pw.Text('Due Date: $_dueDate', style: pw.TextStyle(font: robotoFont)),
-        pw.SizedBox(height: 20),
-        pw.Table.fromTextArray(
-          headers: ['Description', 'Total'],
-          headerStyle: pw.TextStyle(
-            font: robotoFont,
-            fontWeight: pw.FontWeight.bold,
+              ),
+              pw.SizedBox(height: 5),
+              pw.Text(
+                'Invoice #$_invoiceNumber',
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+              pw.Text(
+                'GST/Tax Number: $_taxId',
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+            ],
           ),
-          cellStyle: pw.TextStyle(font: robotoFont),
-          data:
-              _items
-                  .map(
-                    (item) => [
-                      item['description'],
-                      '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-                    ],
-                  )
-                  .toList(),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+      pw.Text(
+        'From:',
+        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: robotoFont),
+      ),
+      pw.Text(_businessName, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_businessAddress, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_companyCityStateZip, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_companyCountry, style: pw.TextStyle(font: robotoFont)),
+      pw.SizedBox(height: 10),
+      pw.Text(
+        'Bill to:',
+        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: robotoFont),
+      ),
+      pw.Text(_clientCompany, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientCityStateZip, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientCountry, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientEmail, style: pw.TextStyle(font: robotoFont)),
+      pw.SizedBox(height: 20),
+      pw.Text(
+        'Invoice Date: $_invoiceDate',
+        style: pw.TextStyle(font: robotoFont),
+      ),
+      pw.Text('Due Date: $_dueDate', style: pw.TextStyle(font: robotoFont)),
+      pw.SizedBox(height: 20),
+      pw.Table.fromTextArray(
+        headers: ['Description', 'Total'],
+        headerStyle: pw.TextStyle(
+          font: robotoFont,
+          fontWeight: pw.FontWeight.bold,
         ),
-        pw.SizedBox(height: 20),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(
-              'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 12, font: robotoFont),
-            ),
-            pw.Text(
-              'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 12, font: robotoFont),
-            ),
-            pw.Text(
-              'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
-              style: pw.TextStyle(fontSize: 14, font: robotoFont),
-            ),
+        cellStyle: pw.TextStyle(font: robotoFont),
+        data:
+        _items
+            .map(
+              (item) => [
+            item['description'],
+            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
           ],
-        ),
+        )
+            .toList(),
+      ),
+      pw.SizedBox(height: 20),
+      pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
+            style: pw.TextStyle(fontSize: 12, font: robotoFont),
+          ),
+          pw.Text(
+            'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
+            style: pw.TextStyle(fontSize: 12, font: robotoFont),
+          ),
+          pw.Text(
+            'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+            style: pw.TextStyle(fontSize: 14, font: robotoFont),
+          ),
+        ],
+      ),
     ];
   }
 
   List<pw.Widget> _buildElegantLayout(
-    Color themeColor,
-    pw.MemoryImage? logoImage,
-    pw.Font robotoFont,
-  ) {
+      Color themeColor,
+      pw.MemoryImage? logoImage,
+      pw.Font robotoFont,
+      ) {
     return [
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            logoImage != null
-                ? pw.Image(logoImage, width: 120, height: 120)
-                : pw.SizedBox(width: 120, height: 120),
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                pw.Text(
-                  'INVOICE',
-                  style: pw.TextStyle(
-                    fontSize: 30,
-                    color: PdfColor.fromInt(themeColor.value),
-                    fontWeight: pw.FontWeight.bold,
-                    fontStyle: pw.FontStyle.italic,
-                    font: robotoFont,
-                  ),
-                ),
-                pw.Text(
-                  'Invoice #$_invoiceNumber',
-                  style: pw.TextStyle(fontSize: 14, font: robotoFont),
-                ),
-                pw.Text(
-                  'Invoice Date: $_invoiceDate',
-                  style: pw.TextStyle(font: robotoFont),
-                ),
-                pw.Text(
-                  'Due Date: $_dueDate',
-                  style: pw.TextStyle(font: robotoFont),
-                ),
-              ],
-            ),
-          ],
-        ),
-        // pw.SizedBox(height: 10),
-        // pw.Text('Invoice #$_invoiceNumber', style: const pw.TextStyle(fontSize: 14)),
-        pw.SizedBox(height: 20),
-        pw.Container(
-          padding: const pw.EdgeInsets.all(8),
-          decoration: pw.BoxDecoration(
-            border: pw.Border(
-              bottom: pw.BorderSide(
-                color: PdfColor.fromInt(themeColor.value),
-                width: 2,
-              ),
-            ),
-          ),
-          child: pw.Text(
-            _businessName,
-            style: pw.TextStyle(
-              fontSize: 18,
-              fontWeight: pw.FontWeight.bold,
-              font: robotoFont,
-            ),
-          ),
-        ),
-        pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_businessAddress, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_companyCityStateZip, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_companyCountry, style: pw.TextStyle(font: robotoFont)),
-        pw.SizedBox(height: 20),
-        pw.Text(
-          'Bill to:',
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: robotoFont),
-        ),
-        pw.Text(_clientCompany, style: pw.TextStyle(font: robotoFont)),
-        // pw.Text(_clientName),
-        // pw.Text(_clientAddress),
-        pw.Text(_clientCityStateZip, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_clientCountry, style: pw.TextStyle(font: robotoFont)),
-        pw.Text(_clientEmail, style: pw.TextStyle(font: robotoFont)),
-        pw.SizedBox(height: 20),
-        pw.Table.fromTextArray(
-          headers: ['Description', 'Qty', 'Price', 'Total'],
-          headerStyle: pw.TextStyle(
-            fontWeight: pw.FontWeight.bold,
-            color: PdfColor.fromInt(themeColor.value),
-            font: robotoFont,
-          ),
-          cellStyle: pw.TextStyle(fontSize: 12, font: robotoFont),
-          data:
-              _items
-                  .map(
-                    (item) => [
-                      item['description'],
-                      item['quantity'].toString(),
-                      '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
-                      '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-                    ],
-                  )
-                  .toList(),
-        ),
-        pw.SizedBox(height: 20),
-        pw.Container(
-          alignment: pw.Alignment.centerRight,
-          child: pw.Column(
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          logoImage != null
+              ? pw.Image(logoImage, width: 120, height: 120)
+              : pw.SizedBox(width: 120, height: 120),
+          pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
               pw.Text(
-                'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, font: robotoFont),
-              ),
-              pw.Text(
-                'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 14, font: robotoFont),
-              ),
-              pw.Text(
-                'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+                'INVOICE',
                 style: pw.TextStyle(
-                  fontSize: 18,
+                  fontSize: 30,
+                  color: PdfColor.fromInt(themeColor.value),
                   fontWeight: pw.FontWeight.bold,
+                  fontStyle: pw.FontStyle.italic,
                   font: robotoFont,
                 ),
               ),
+              pw.Text(
+                'Invoice #$_invoiceNumber',
+                style: pw.TextStyle(fontSize: 14, font: robotoFont),
+              ),
+              pw.Text(
+                'Invoice Date: $_invoiceDate',
+                style: pw.TextStyle(font: robotoFont),
+              ),
+              pw.Text(
+                'Due Date: $_dueDate',
+                style: pw.TextStyle(font: robotoFont),
+              ),
             ],
           ),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+      pw.Container(
+        padding: const pw.EdgeInsets.all(8),
+        decoration: pw.BoxDecoration(
+          border: pw.Border(
+            bottom: pw.BorderSide(
+              color: PdfColor.fromInt(themeColor.value),
+              width: 2,
+            ),
+          ),
         ),
+        child: pw.Text(
+          _businessName,
+          style: pw.TextStyle(
+            fontSize: 18,
+            fontWeight: pw.FontWeight.bold,
+            font: robotoFont,
+          ),
+        ),
+      ),
+      pw.Container(
+        padding: const pw.EdgeInsets.all(8),
+        child: pw.Text(
+          'GST/Tax Number: $_taxId',
+          style: pw.TextStyle(
+            fontSize: 14,
+            font: robotoFont,
+          ),
+        ),
+      ),
+      pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_businessAddress, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_companyCityStateZip, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_companyCountry, style: pw.TextStyle(font: robotoFont)),
+      pw.SizedBox(height: 20),
+      pw.Text(
+        'Bill to:',
+        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: robotoFont),
+      ),
+      pw.Text(_clientCompany, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientCityStateZip, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientCountry, style: pw.TextStyle(font: robotoFont)),
+      pw.Text(_clientEmail, style: pw.TextStyle(font: robotoFont)),
+      pw.SizedBox(height: 20),
+      pw.Table.fromTextArray(
+        headers: ['Description', 'Qty', 'Price', 'Total'],
+        headerStyle: pw.TextStyle(
+          fontWeight: pw.FontWeight.bold,
+          color: PdfColor.fromInt(themeColor.value),
+          font: robotoFont,
+        ),
+        cellStyle: pw.TextStyle(fontSize: 12, font: robotoFont),
+        data:
+        _items
+            .map(
+              (item) => [
+            item['description'],
+            item['quantity'].toString(),
+            '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
+            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+          ],
+        )
+            .toList(),
+      ),
+      pw.SizedBox(height: 20),
+      pw.Container(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.end,
+          children: [
+            pw.Text(
+              'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
+              style: pw.TextStyle(fontSize: 14, font: robotoFont),
+            ),
+            pw.Text(
+              'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
+              style: pw.TextStyle(fontSize: 14, font: robotoFont),
+            ),
+            pw.Text(
+              'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+              style: pw.TextStyle(
+                fontSize: 18,
+                fontWeight: pw.FontWeight.bold,
+                font: robotoFont,
+              ),
+            ),
+          ],
+        ),
+      ),
     ];
   }
-
   List<pw.Widget> _buildCompactLayout(
-    Color themeColor,
-    pw.MemoryImage? logoImage,
-    pw.Font robotoFont,
-  ) {
+      Color themeColor,
+      pw.MemoryImage? logoImage,
+      pw.Font robotoFont,
+      ) {
     return [
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            logoImage != null
-                ? pw.Image(logoImage, width: 60, height: 60)
-                : pw.SizedBox(width: 60, height: 60),
-            pw.Column(
-              children: [
-                pw.Text(
-                  'INVOICE',
-                  style: pw.TextStyle(
-                    fontSize: 20,
-                    color: PdfColor.fromInt(themeColor.value),
-                    fontWeight: pw.FontWeight.bold,
-                    font: robotoFont,
-                  ),
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text(
-                  'Invoice #$_invoiceNumber',
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-              ],
-            ),
-          ],
-        ),
-        // pw.SizedBox(height: 10),
-        // pw.Text('Invoice #$_invoiceNumber', style: const pw.TextStyle(fontSize: 12)),
-        pw.SizedBox(height: 10),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  'From:',
-                  style: pw.TextStyle(
-                    fontWeight: pw.FontWeight.bold,
-                    font: robotoFont,
-                  ),
-                ),
-                pw.Text(
-                  _businessName,
-                  style: pw.TextStyle(fontSize: 14, font: robotoFont),
-                ),
-                pw.Text(
-                  _yourName,
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-                pw.Text(
-                  _businessAddress,
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-                pw.Text(
-                  _companyCityStateZip,
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-                pw.Text(
-                  _companyCountry,
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-              ],
-            ),
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                pw.Text(
-                  'Bill to:',
-                  style: pw.TextStyle(
-                    fontWeight: pw.FontWeight.bold,
-                    font: robotoFont,
-                  ),
-                ),
-                pw.Text(
-                  _clientCompany,
-                  style: pw.TextStyle(fontSize: 14, font: robotoFont),
-                ),
-                pw.Text(
-                  _clientCityStateZip,
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-                pw.Text(
-                  _clientCountry,
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-                pw.Text(
-                  _clientEmail,
-                  style: pw.TextStyle(fontSize: 12, font: robotoFont),
-                ),
-              ],
-            ),
-          ],
-        ),
-        pw.SizedBox(height: 10),
-        pw.Text(
-          'Invoice Date: $_invoiceDate',
-          style: pw.TextStyle(fontSize: 12, font: robotoFont),
-        ),
-        pw.Text(
-          'Due Date: $_dueDate',
-          style: pw.TextStyle(fontSize: 12, font: robotoFont),
-        ),
-        pw.SizedBox(height: 10),
-        pw.Table.fromTextArray(
-          headers: ['Item', 'Total'],
-          headerStyle: pw.TextStyle(
-            fontWeight: pw.FontWeight.bold,
-            color: PdfColor.fromInt(themeColor.value),
-            font: robotoFont,
-          ),
-          cellStyle: pw.TextStyle(fontSize: 10, font: robotoFont),
-          data:
-              _items
-                  .map(
-                    (item) => [
-                      item['description'],
-                      '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-                    ],
-                  )
-                  .toList(),
-        ),
-        pw.SizedBox(height: 10),
-        pw.Container(
-          alignment: pw.Alignment.centerRight,
-          child: pw.Column(
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          logoImage != null
+              ? pw.Image(logoImage, width: 60, height: 60)
+              : pw.SizedBox(width: 60, height: 60),
+          pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
               pw.Text(
-                'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 10, font: robotoFont),
-              ),
-              pw.Text(
-                'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
-                style: pw.TextStyle(fontSize: 10, font: robotoFont),
-              ),
-              pw.Text(
-                'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+                'INVOICE',
                 style: pw.TextStyle(
-                  fontSize: 14,
+                  fontSize: 20,
+                  color: PdfColor.fromInt(themeColor.value),
                   fontWeight: pw.FontWeight.bold,
                   font: robotoFont,
                 ),
               ),
+              pw.SizedBox(height: 5),
+              pw.Text(
+                'Invoice #$_invoiceNumber',
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+              pw.Text(
+                'GST/Tax Number: $_taxId',
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
             ],
           ),
+        ],
+      ),
+      pw.SizedBox(height: 10),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'From:',
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  font: robotoFont,
+                ),
+              ),
+              pw.Text(
+                _businessName,
+                style: pw.TextStyle(fontSize: 14, font: robotoFont),
+              ),
+              pw.Text(
+                _yourName,
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+              pw.Text(
+                _businessAddress,
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+              pw.Text(
+                _companyCityStateZip,
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+              pw.Text(
+                _companyCountry,
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+            ],
+          ),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                'Bill to:',
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  font: robotoFont,
+                ),
+              ),
+              pw.Text(
+                _clientCompany,
+                style: pw.TextStyle(fontSize: 14, font: robotoFont),
+              ),
+              pw.Text(
+                _clientCityStateZip,
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+              pw.Text(
+                _clientCountry,
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+              pw.Text(
+                _clientEmail,
+                style: pw.TextStyle(fontSize: 12, font: robotoFont),
+              ),
+            ],
+          ),
+        ],
+      ),
+      pw.SizedBox(height: 10),
+      pw.Text(
+        'Invoice Date: $_invoiceDate',
+        style: pw.TextStyle(fontSize: 12, font: robotoFont),
+      ),
+      pw.Text(
+        'Due Date: $_dueDate',
+        style: pw.TextStyle(fontSize: 12, font: robotoFont),
+      ),
+      pw.SizedBox(height: 10),
+      pw.Table.fromTextArray(
+        headers: ['Item', 'Total'],
+        headerStyle: pw.TextStyle(
+          fontWeight: pw.FontWeight.bold,
+          color: PdfColor.fromInt(themeColor.value),
+          font: robotoFont,
         ),
-      ];
+        cellStyle: pw.TextStyle(fontSize: 10, font: robotoFont),
+        data:
+        _items
+            .map(
+              (item) => [
+            item['description'],
+            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+          ],
+        )
+            .toList(),
+      ),
+      pw.SizedBox(height: 10),
+      pw.Container(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.end,
+          children: [
+            pw.Text(
+              'Subtotal: $_selectedCurrency${_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']).toStringAsFixed(2)}',
+              style: pw.TextStyle(fontSize: 10, font: robotoFont),
+            ),
+            pw.Text(
+              'Tax (${_taxPercentage.toStringAsFixed(1)}%): $_selectedCurrency${(_items.fold<double>(0.0, (sum, item) => sum + item['quantity'] * item['price']) * (_taxPercentage / 100)).toStringAsFixed(2)}',
+              style: pw.TextStyle(fontSize: 10, font: robotoFont),
+            ),
+            pw.Text(
+              'Total: $_selectedCurrency${calculateTotal().toStringAsFixed(2)}',
+              style: pw.TextStyle(
+                fontSize: 14,
+                fontWeight: pw.FontWeight.bold,
+                font: robotoFont,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 
   double calculateTotal() {
@@ -1579,6 +1605,16 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                               prefixIcon: Icon(Icons.flag),
                             ),
                             onChanged: (value) => _companyCountry = value,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _taxIdController,
+                            decoration: const InputDecoration(
+                              labelText: 'GST Number/Tax ID',
+                              prefixIcon: Icon(Icons.account_balance),
+                              hintText: 'Enter GST or other Tax Identification Number',
+                            ),
+                            onChanged: (value) => _taxId = value,
                           ),
                         ],
                       ),

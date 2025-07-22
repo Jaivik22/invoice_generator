@@ -49,6 +49,9 @@ class InvoiceInfo extends HiveObject {
   @HiveField(14)
   String? logoPath;
 
+  @HiveField(15)
+  String taxId;
+
   InvoiceInfo({
     required this.businessName,
     required this.businessAddress,
@@ -65,5 +68,6 @@ class InvoiceInfo extends HiveObject {
     required this.currency,
     required this.taxPercentage,
     this.logoPath,
+    required this.taxId
   });
 }
