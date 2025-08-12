@@ -1,21 +1,30 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:invoice_generator/screens/invoice_generator_app.dart';
 
 import 'firebase_options.dart';
 import 'model/invoice_info.dart';
 
-
-
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await checkForUpdate();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Hive.initFlutter();
   Hive.registerAdapter(InvoiceInfoAdapter());
   runApp(const MyApp());
+}
+
+Future<void> checkForUpdate() async {
+  try {
+    final info = await InAppUpdate.checkForUpdate();
+
+    if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+      await InAppUpdate.performImmediateUpdate();
+    }
+  } catch (e) {}
 }
 
 class MyApp extends StatelessWidget {
@@ -40,4 +49,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

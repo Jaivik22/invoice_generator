@@ -19,7 +19,8 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , RouteAware{
+class _HomePageState extends State<HomePage>
+    with WidgetsBindingObserver, RouteAware {
   List<dynamic> _savedKeys = [];
   final AdController adController = Get.put(AdController());
   bool _isReady = false;
@@ -42,10 +43,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
       setState(() {
         _isReady = true;
       });
-
-
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   @override
@@ -63,7 +61,7 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
   Future<void> _loadSavedKeys() async {
     final box = Hive.box<InvoiceInfo>('invoiceBox');
     setState(() {
-      _savedKeys =box.keys.toList() ?? [];
+      _savedKeys = box.keys.toList() ?? [];
     });
   }
 
@@ -78,7 +76,6 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
     super.dispose();
     WidgetsBinding.instance.removeObserver(this);
     routeObserver.unsubscribe(this);
-
   }
 
   Future<void> _deleteInvoice(String key) async {
@@ -134,17 +131,21 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const InvoiceHomePage(
-                        invoiceKey: "",
-                        showInterstitialOnLoad: true,
-                      ),
+                      builder:
+                          (context) => const InvoiceHomePage(
+                            invoiceKey: "",
+                            showInterstitialOnLoad: true,
+                          ),
                     ),
                   );
                   // adController.showOrLoadInterstitialAd(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF349D78),
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 15,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -184,136 +185,158 @@ class _HomePageState extends State<HomePage>  with WidgetsBindingObserver , Rout
                     ),
                   ],
                 ),
-                child: !_isReady?  Lottie.asset('assets/animation/loading_files.json'):
-                _savedKeys.isEmpty
-                    ? Center(
-                  child: FadeInUp(
-                    duration: const Duration(milliseconds: 600),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.description_outlined,
-                          size: 80,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No Invoices Yet',
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF2C3E50),
+                child:
+                    !_isReady
+                        ? Lottie.asset('assets/animation/loading_files.json')
+                        : _savedKeys.isEmpty
+                        ? Center(
+                          child: FadeInUp(
+                            duration: const Duration(milliseconds: 600),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.description_outlined,
+                                  size: 80,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No Invoices Yet',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF2C3E50),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Start by creating your first invoice!',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => const InvoiceHomePage(
+                                              invoiceKey: "",
+                                              showInterstitialOnLoad: true,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF349D78),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Create Invoice Now',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Start by creating your first invoice!',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const InvoiceHomePage(
-                                  invoiceKey: "",
-                                  showInterstitialOnLoad: true,
+                        )
+                        : ListView.builder(
+                          padding: const EdgeInsets.all(8.0),
+                          itemCount: _savedKeys.length,
+                          itemBuilder: (context, index) {
+                            final key = _savedKeys[index];
+                            return FadeInDown(
+                              duration: const Duration(milliseconds: 600),
+                              child: Card(
+                                elevation: 2,
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  title: Text(
+                                    key,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder:
+                                            (context) => AlertDialog(
+                                              title: Text('Delete $key?'),
+                                              content: const Text(
+                                                'This will permanently delete the invoice data.',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        context,
+                                                        false,
+                                                      ),
+                                                  child: const Text('Cancel'),
+                                                ),
+                                                TextButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        context,
+                                                        true,
+                                                      ),
+                                                  child: const Text('Delete'),
+                                                ),
+                                              ],
+                                            ),
+                                      );
+                                      if (confirm == true) {
+                                        await _deleteInvoice(key);
+                                      }
+                                    },
+                                  ),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => InvoiceHomePage(
+                                              invoiceKey: key,
+                                              showInterstitialOnLoad: true,
+                                            ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             );
-
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF349D78),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: Text(
-                            'Create Invoice Now',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-                    :  ListView.builder(
-                  padding: const EdgeInsets.all(8.0),
-                  itemCount: _savedKeys.length,
-                  itemBuilder: (context, index) {
-                    final key = _savedKeys[index];
-                    return FadeInDown(
-                      duration: const Duration(milliseconds: 600),
-                      child: Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          title: Text(
-                            key,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('Delete $key?'),
-                                  content: const Text('This will permanently delete the invoice data.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, true),
-                                      child: const Text('Delete'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) {
-                                await _deleteInvoice(key);
-                              }
-                            },
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => InvoiceHomePage(
-                                  invoiceKey: key,
-                                  showInterstitialOnLoad: true,
-                                ),
-                              ),
-                            );
                           },
                         ),
-                      ),
-                    );
-                  },
-                )
               ),
-            )
-
+            ),
           ],
         ),
       ),

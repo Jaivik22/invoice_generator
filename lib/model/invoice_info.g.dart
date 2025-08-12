@@ -32,13 +32,14 @@ class InvoiceInfoAdapter extends TypeAdapter<InvoiceInfo> {
       currency: fields[12] as String,
       taxPercentage: fields[13] as double,
       logoPath: fields[14] as String?,
+      taxId: fields[15] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, InvoiceInfo obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.businessName)
       ..writeByte(1)
@@ -68,7 +69,9 @@ class InvoiceInfoAdapter extends TypeAdapter<InvoiceInfo> {
       ..writeByte(13)
       ..write(obj.taxPercentage)
       ..writeByte(14)
-      ..write(obj.logoPath);
+      ..write(obj.logoPath)
+      ..writeByte(15)
+      ..write(obj.taxId);
   }
 
   @override

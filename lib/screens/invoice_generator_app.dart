@@ -26,7 +26,7 @@ void main() {
 
 /// define the observer
 final RouteObserver<ModalRoute<void>> routeObserver =
-RouteObserver<ModalRoute<void>>();
+    RouteObserver<ModalRoute<void>>();
 
 class InvoiceGeneratorApp extends StatelessWidget {
   const InvoiceGeneratorApp({Key? key}) : super(key: key);
@@ -58,14 +58,19 @@ class InvoiceGeneratorApp extends StatelessWidget {
 class InvoiceHomePage extends StatefulWidget {
   final String? invoiceKey; // Add invoiceKey parameter
   final bool showInterstitialOnLoad;
-  const InvoiceHomePage({super.key, this.invoiceKey,    this.showInterstitialOnLoad = false,});
+
+  const InvoiceHomePage({
+    super.key,
+    this.invoiceKey,
+    this.showInterstitialOnLoad = false,
+  });
 
   @override
   _InvoiceHomePageState createState() => _InvoiceHomePageState();
 }
 
-class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingObserver{
-
+class _InvoiceHomePageState extends State<InvoiceHomePage>
+    with WidgetsBindingObserver {
   final AdController adController = Get.put(AdController());
   bool _adFinished = false;
 
@@ -139,8 +144,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       TextEditingController();
   final TextEditingController _companyCountryController =
       TextEditingController();
-  final TextEditingController _taxIdController =
-      TextEditingController();
+  final TextEditingController _taxIdController = TextEditingController();
 
   final TextEditingController _clientCompanyController =
       TextEditingController();
@@ -280,21 +284,21 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       currency: _selectedCurrency,
       taxPercentage: _taxPercentage,
       logoPath: _logoFile != null ? _logoFile!.path : "",
-      taxId: _taxId
+      taxId: _taxId,
     );
 
     final result = await saveInvoice(invoice, keyName);
 
     if (result) {
       // print("Invoice saved successfully.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invoice saved successfully.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Invoice saved successfully.')));
     } else {
       // print("An invoice with this key already exists!");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please use diff key to save.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please use diff key to save.')));
     }
   }
 
@@ -311,11 +315,10 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     final box = Hive.box<InvoiceInfo>('invoiceBox');
 
     if (box.containsKey(keyName)) {
-      if(widget.invoiceKey != null &&
-          widget.invoiceKey!.isNotEmpty){
+      if (widget.invoiceKey != null && widget.invoiceKey!.isNotEmpty) {
         await box.put(keyName, info);
         return true;
-      }else {
+      } else {
         return false;
       }
     }
@@ -425,10 +428,10 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   }
 
   List<pw.Widget> _buildProfessionalLayout(
-      Color themeColor,
-      pw.MemoryImage? logoImage,
-      pw.Font robotoFont,
-      ) {
+    Color themeColor,
+    pw.MemoryImage? logoImage,
+    pw.Font robotoFont,
+  ) {
     return [
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -496,10 +499,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             'Invoice Date: $_invoiceDate',
             style: pw.TextStyle(font: robotoFont),
           ),
-          pw.Text(
-            'Due Date: $_dueDate',
-            style: pw.TextStyle(font: robotoFont),
-          ),
+          pw.Text('Due Date: $_dueDate', style: pw.TextStyle(font: robotoFont)),
         ],
       ),
       pw.SizedBox(height: 20),
@@ -511,16 +511,16 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
         ),
         cellStyle: pw.TextStyle(font: robotoFont),
         data:
-        _items
-            .map(
-              (item) => [
-            item['description'],
-            item['quantity'].toString(),
-            '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
-            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-          ],
-        )
-            .toList(),
+            _items
+                .map(
+                  (item) => [
+                    item['description'],
+                    item['quantity'].toString(),
+                    '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
+                    '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+                  ],
+                )
+                .toList(),
       ),
       pw.SizedBox(height: 20),
       pw.Column(
@@ -549,10 +549,10 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
 
   //
   List<pw.Widget> _buildModernLayout(
-      Color themeColor,
-      pw.MemoryImage? logoImage,
-      pw.Font robotoFont,
-      ) {
+    Color themeColor,
+    pw.MemoryImage? logoImage,
+    pw.Font robotoFont,
+  ) {
     return [
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -603,10 +603,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
               ),
               pw.Text(_businessName, style: pw.TextStyle(font: robotoFont)),
               pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
-              pw.Text(
-                _businessAddress,
-                style: pw.TextStyle(font: robotoFont),
-              ),
+              pw.Text(_businessAddress, style: pw.TextStyle(font: robotoFont)),
               pw.Text(
                 _companyCityStateZip,
                 style: pw.TextStyle(font: robotoFont),
@@ -643,10 +640,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             'Invoice Date: $_invoiceDate',
             style: pw.TextStyle(font: robotoFont),
           ),
-          pw.Text(
-            'Due Date: $_dueDate',
-            style: pw.TextStyle(font: robotoFont),
-          ),
+          pw.Text('Due Date: $_dueDate', style: pw.TextStyle(font: robotoFont)),
         ],
       ),
       pw.SizedBox(height: 20),
@@ -658,16 +652,16 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
         ),
         cellStyle: pw.TextStyle(font: robotoFont),
         data:
-        _items
-            .map(
-              (item) => [
-            item['description'],
-            item['quantity'].toString(),
-            '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
-            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-          ],
-        )
-            .toList(),
+            _items
+                .map(
+                  (item) => [
+                    item['description'],
+                    item['quantity'].toString(),
+                    '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
+                    '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+                  ],
+                )
+                .toList(),
       ),
       pw.SizedBox(height: 20),
       pw.Align(
@@ -698,10 +692,10 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   }
 
   List<pw.Widget> _buildMinimalLayout(
-      Color themeColor,
-      pw.MemoryImage? logoImage,
-      pw.Font robotoFont,
-      ) {
+    Color themeColor,
+    pw.MemoryImage? logoImage,
+    pw.Font robotoFont,
+  ) {
     return [
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -767,14 +761,14 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
         ),
         cellStyle: pw.TextStyle(font: robotoFont),
         data:
-        _items
-            .map(
-              (item) => [
-            item['description'],
-            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-          ],
-        )
-            .toList(),
+            _items
+                .map(
+                  (item) => [
+                    item['description'],
+                    '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+                  ],
+                )
+                .toList(),
       ),
       pw.SizedBox(height: 20),
       pw.Column(
@@ -798,10 +792,10 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   }
 
   List<pw.Widget> _buildElegantLayout(
-      Color themeColor,
-      pw.MemoryImage? logoImage,
-      pw.Font robotoFont,
-      ) {
+    Color themeColor,
+    pw.MemoryImage? logoImage,
+    pw.Font robotoFont,
+  ) {
     return [
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -862,10 +856,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
         padding: const pw.EdgeInsets.all(8),
         child: pw.Text(
           'GST/Tax Number: $_taxId',
-          style: pw.TextStyle(
-            fontSize: 14,
-            font: robotoFont,
-          ),
+          style: pw.TextStyle(fontSize: 14, font: robotoFont),
         ),
       ),
       pw.Text(_yourName, style: pw.TextStyle(font: robotoFont)),
@@ -891,16 +882,16 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
         ),
         cellStyle: pw.TextStyle(fontSize: 12, font: robotoFont),
         data:
-        _items
-            .map(
-              (item) => [
-            item['description'],
-            item['quantity'].toString(),
-            '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
-            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-          ],
-        )
-            .toList(),
+            _items
+                .map(
+                  (item) => [
+                    item['description'],
+                    item['quantity'].toString(),
+                    '$_selectedCurrency${item['price'].toStringAsFixed(2)}',
+                    '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+                  ],
+                )
+                .toList(),
       ),
       pw.SizedBox(height: 20),
       pw.Container(
@@ -929,11 +920,12 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       ),
     ];
   }
+
   List<pw.Widget> _buildCompactLayout(
-      Color themeColor,
-      pw.MemoryImage? logoImage,
-      pw.Font robotoFont,
-      ) {
+    Color themeColor,
+    pw.MemoryImage? logoImage,
+    pw.Font robotoFont,
+  ) {
     return [
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -1051,14 +1043,14 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
         ),
         cellStyle: pw.TextStyle(fontSize: 10, font: robotoFont),
         data:
-        _items
-            .map(
-              (item) => [
-            item['description'],
-            '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
-          ],
-        )
-            .toList(),
+            _items
+                .map(
+                  (item) => [
+                    item['description'],
+                    '$_selectedCurrency${(item['quantity'] * item['price']).toStringAsFixed(2)}',
+                  ],
+                )
+                .toList(),
       ),
       pw.SizedBox(height: 10),
       pw.Container(
@@ -1109,15 +1101,14 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   }
 
   Future<String?> showKeyNameDialog(BuildContext context) async {
-
     return showDialog<String>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Enter Key Name'),
+          title: Text('Enter name to save'),
           content: TextField(
             autofocus: true,
-            decoration: InputDecoration(hintText: 'Enter a key name'),
+            decoration: InputDecoration(hintText: 'Enter name to save'),
             onChanged: (value) {
               keyName = value;
             },
@@ -1143,14 +1134,14 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
       },
     );
   }
+
   Future<Uint8List> compressImage(String path) async {
     final image = img.decodeImage(File(path).readAsBytesSync())!;
     final resized = img.copyResize(image, width: 800);
     return Uint8List.fromList(img.encodeJpg(resized, quality: 70));
   }
 
-
-// Add this method:
+  // Add this method:
   Future<void> _generateAndSavePDF() async {
     final pdf = pw.Document();
     final themeColor = _colorOptions[_selectedColor]!;
@@ -1166,7 +1157,9 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     }
 
     // Load Roboto font
-    final fontData = await DefaultAssetBundle.of(context).load('assets/fonts/Roboto-Regular.ttf');
+    final fontData = await DefaultAssetBundle.of(
+      context,
+    ).load('assets/fonts/Roboto-Regular.ttf');
     final robotoFont = pw.Font.ttf(fontData);
 
     pdf.addPage(
@@ -1182,7 +1175,11 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
             case 'Compact':
               return _buildCompactLayout(themeColor, logoImage, robotoFont);
             default:
-              return _buildProfessionalLayout(themeColor, logoImage, robotoFont);
+              return _buildProfessionalLayout(
+                themeColor,
+                logoImage,
+                robotoFont,
+              );
           }
         },
       ),
@@ -1196,7 +1193,8 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
     Directory? downloadsDir;
 
     if (Platform.isAndroid || Platform.isIOS) {
-      downloadsDir = await getExternalStorageDirectory(); // falls back to app dir
+      downloadsDir =
+          await getExternalStorageDirectory(); // falls back to app dir
     } else {
       downloadsDir = await getDownloadsDirectory();
     }
@@ -1207,18 +1205,15 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
 
     await file.writeAsBytes(await pdf.save());
 
-    final snackBar = SnackBar(
-      content: Text('PDF saved to ${file.path}'),
-    );
+    final snackBar = SnackBar(content: Text('PDF saved to ${file.path}'));
 
     await ScaffoldMessenger.of(context).showSnackBar(snackBar).closed;
     await OpenFile.open(file.path);
-
-
   }
 
   void _removeItem(int index) {
-    if (_items.length > 1) { // Prevent removing the last item
+    if (_items.length > 1) {
+      // Prevent removing the last item
       setState(() {
         _items.removeAt(index);
         _itemControllers.removeAt(index);
@@ -1233,14 +1228,13 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     if (!_adFinished) {
-      return Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
       // bottomNavigationBar: Container(child:  Obx(() => adController.getBannerAdWidget2()),),
       appBar: AppBar(
-        automaticallyImplyLeading: false, // 👈 removes the back button
+        automaticallyImplyLeading: false,
+        // 👈 removes the back button
         title: const Text(''),
         centerTitle: true,
         actions: [
@@ -1261,12 +1255,23 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                       }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Your company and Client's company are necessary to save form")),
+                        const SnackBar(
+                          content: Text(
+                            "Your company and Client's company are necessary to save form",
+                          ),
+                        ),
                       );
                     }
                   },
-                  icon: const Icon(Icons.save, size: 16,color: Color(0xFF2E8B77),),
-                  label: const Text('Save',style: TextStyle(color: Color(0xFF2E8B77)),),
+                  icon: const Icon(
+                    Icons.save,
+                    size: 16,
+                    color: Color(0xFF2E8B77),
+                  ),
+                  label: const Text(
+                    'Save',
+                    style: TextStyle(color: Color(0xFF2E8B77)),
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -1276,21 +1281,28 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                   ),
                 ),
 
-
                 const SizedBox(width: 5),
                 ElevatedButton.icon(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _generatePDF();
-                    }
-                    else{
+                    } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please fill necessary fields")),
+                        const SnackBar(
+                          content: Text("Please fill necessary fields"),
+                        ),
                       );
                     }
                   },
-                  icon: const Icon(Icons.picture_as_pdf, size: 16,color: Color(0xFF2E8B77),),
-                  label: const Text('Preview',style: TextStyle(color: Color(0xFF2E8B77)),),
+                  icon: const Icon(
+                    Icons.picture_as_pdf,
+                    size: 16,
+                    color: Color(0xFF2E8B77),
+                  ),
+                  label: const Text(
+                    'Preview',
+                    style: TextStyle(color: Color(0xFF2E8B77)),
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -1305,15 +1317,23 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _generateAndSharePdf();
-                    }
-                    else{
+                    } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please fill necessary fields")),
+                        const SnackBar(
+                          content: Text("Please fill necessary fields"),
+                        ),
                       );
                     }
                   },
-                  icon: const Icon(Icons.share, size: 16,color: Color(0xFF2E8B77),),
-                  label: const Text('Share',style: TextStyle(color: Color(0xFF2E8B77)),),
+                  icon: const Icon(
+                    Icons.share,
+                    size: 16,
+                    color: Color(0xFF2E8B77),
+                  ),
+                  label: const Text(
+                    'Share',
+                    style: TextStyle(color: Color(0xFF2E8B77)),
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -1336,7 +1356,9 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please fill necessary fields")),
+                        const SnackBar(
+                          content: Text("Please fill necessary fields"),
+                        ),
                       );
                     }
                   },
@@ -1356,7 +1378,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                     ),
                     textStyle: const TextStyle(fontSize: 12),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -1530,8 +1552,15 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                               const SizedBox(width: 12),
                               ElevatedButton.icon(
                                 onPressed: _pickLogo,
-                                icon: const Icon(Icons.upload, size: 18,color: Color(0xFF2E8B77)),
-                                label: const Text('Upload',style: TextStyle(color: Color(0xFF2E8B77))),
+                                icon: const Icon(
+                                  Icons.upload,
+                                  size: 18,
+                                  color: Color(0xFF2E8B77),
+                                ),
+                                label: const Text(
+                                  'Upload',
+                                  style: TextStyle(color: Color(0xFF2E8B77)),
+                                ),
                               ),
                             ],
                           ),
@@ -1563,7 +1592,16 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                           TextFormField(
                             controller: _businessNameController,
                             decoration: const InputDecoration(
-                              labelText: 'Your Company',
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('Your Company'),
+                                  Text(
+                                    ' *',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
                               prefixIcon: Icon(Icons.business),
                             ),
                             onChanged: (value) => _businessName = value,
@@ -1612,7 +1650,8 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                             decoration: const InputDecoration(
                               labelText: 'GST Number/Tax ID',
                               prefixIcon: Icon(Icons.account_balance),
-                              hintText: 'Enter GST or other Tax Identification Number',
+                              hintText:
+                                  'Enter GST or other Tax Identification Number',
                             ),
                             onChanged: (value) => _taxId = value,
                           ),
@@ -1644,7 +1683,21 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                           TextFormField(
                             controller: _clientCompanyController,
                             decoration: const InputDecoration(
-                              labelText: 'Client\'s Company or Name',
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      'Client\'s Company or Name',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Text(
+                                    ' *',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
                               prefixIcon: Icon(Icons.business),
                             ),
                             onChanged: (value) => _clientCompany = value,
@@ -1799,22 +1852,43 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                                   children: [
                                     Expanded(
                                       child: TextFormField(
-                                        controller: _itemControllers[index]['description'],
+                                        controller:
+                                            _itemControllers[index]['description'],
                                         decoration: const InputDecoration(
-                                          labelText: 'Description',
+                                          label: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text('Description'),
+                                              Text(
+                                                ' *',
+                                                style: TextStyle(color: Colors.red),
+                                              ),
+                                            ],
+                                          ),
                                           prefixIcon: Icon(Icons.description),
                                         ),
-                                        onChanged: (value) => _items[index]['description'] = value,
+                                        onChanged:
+                                            (value) =>
+                                                _items[index]['description'] =
+                                                    value,
                                         validator: (value) {
-                                          if (_items.every((item) => item['description'].isEmpty)) {
-                                            return index == 0 ? 'At least one item description is required' : null;
+                                          if (_items.every(
+                                            (item) =>
+                                                item['description'].isEmpty,
+                                          )) {
+                                            return index == 0
+                                                ? 'At least one item description is required'
+                                                : null;
                                           }
                                           return null;
                                         },
                                       ),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
                                       onPressed: () => _removeItem(index),
                                     ),
                                   ],
@@ -1824,26 +1898,37 @@ class _InvoiceHomePageState extends State<InvoiceHomePage> with WidgetsBindingOb
                                   children: [
                                     Expanded(
                                       child: TextFormField(
-                                        controller: _itemControllers[index]['quantity'],
+                                        controller:
+                                            _itemControllers[index]['quantity'],
                                         decoration: const InputDecoration(
                                           labelText: 'Quantity',
                                           prefixIcon: Icon(Icons.numbers),
                                         ),
                                         keyboardType: TextInputType.number,
-                                        onChanged: (value) => _items[index]['quantity'] = int.tryParse(value) ?? 0,
+                                        onChanged:
+                                            (value) =>
+                                                _items[index]['quantity'] =
+                                                    int.tryParse(value) ?? 0,
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: TextFormField(
-                                        controller: _itemControllers[index]['price'],
+                                        controller:
+                                            _itemControllers[index]['price'],
                                         decoration: InputDecoration(
                                           labelText: 'Price',
-                                          prefixIcon: const Icon(Icons.monetization_on),
+                                          prefixIcon: const Icon(
+                                            Icons.monetization_on,
+                                          ),
                                           prefixText: _selectedCurrency,
                                         ),
                                         keyboardType: TextInputType.number,
-                                        onChanged: (value) => _items[index]['price'] = double.tryParse(value) ?? 0.0,
+                                        onChanged:
+                                            (value) =>
+                                                _items[index]['price'] =
+                                                    double.tryParse(value) ??
+                                                    0.0,
                                       ),
                                     ),
                                   ],

@@ -24,7 +24,6 @@ class AdmobKeys {
   });
 }
 
-
 class AdController extends GetxController {
   InterstitialAd? _interstitialAd;
   RewardedAd? _rewardedAd;
@@ -36,11 +35,13 @@ class AdController extends GetxController {
   final RxBool isNativeLoading = false.obs;
   final RxBool isNativeLoaded = false.obs;
   AdmobKeys? keys;
+
   @override
   void onInit() {
     super.onInit();
     initialize();
   }
+
   void checkAndLoadAdsIfNeeded() {
     Connectivity().checkConnectivity().then((status) {
       if (status != ConnectivityResult.none &&
@@ -53,13 +54,12 @@ class AdController extends GetxController {
 
   Future<AdmobKeys?> fetchAdmobKeys() async {
     try {
-      CollectionReference keysCollection =
-      FirebaseFirestore.instance.collection('admob_keys');
+      CollectionReference keysCollection = FirebaseFirestore.instance
+          .collection('admob_keys');
       QuerySnapshot snapshot = await keysCollection.limit(1).get();
 
       print("Total Docs: ${snapshot.docs.length}");
       print("Docs: ${snapshot.docs.map((e) => e.id).toList()}");
-
 
       if (snapshot.docs.isEmpty) {
         print('No Admob keys found');
@@ -67,14 +67,14 @@ class AdController extends GetxController {
       }
 
       Map<String, dynamic> data =
-      snapshot.docs.first.data() as Map<String, dynamic>;
+          snapshot.docs.first.data() as Map<String, dynamic>;
 
       print("Admob Keys ${data}");
       return AdmobKeys(
-          banner: data['Banner01'] ?? '',
-          interstitial: data['Interstitial01'] ?? '',
-          rewarded: data['Rewarded01'] ?? '',
-          banner2: data['Banner02'] ?? ''
+        banner: data['Banner01'] ?? '',
+        interstitial: data['Interstitial01'] ?? '',
+        rewarded: data['Rewarded01'] ?? '',
+        banner2: data['Banner02'] ?? '',
       );
     } catch (e) {
       print('Error fetching Admob keys: $e');
@@ -105,7 +105,7 @@ class AdController extends GetxController {
   }
 
   Future<void> initializeAds() async {
-    keys =await fetchAdmobKeys();
+    keys = await fetchAdmobKeys();
     await MobileAds.instance.initialize();
     preloadInterstitialAd();
     preloadRewardedAd();
@@ -115,10 +115,13 @@ class AdController extends GetxController {
   }
 
   void listenForInternetAndLoadAds() {
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((status) {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      status,
+    ) {
       if (status != ConnectivityResult.none) {
         // print("Internet available — loading ads.");
-        _connectivitySubscription?.cancel(); // stop listening once internet is back
+        _connectivitySubscription
+            ?.cancel(); // stop listening once internet is back
         initializeAds();
       }
     });
@@ -130,7 +133,7 @@ class AdController extends GetxController {
     isAdLoading.value = true;
 
     InterstitialAd.load(
-      adUnitId: keys!=null?keys!.interstitial:"",
+      adUnitId: keys != null ? keys!.interstitial : "",
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
@@ -165,12 +168,15 @@ class AdController extends GetxController {
     return launchCount > 2;
   }
 
-  Future<void> showOrLoadInterstitialAd(BuildContext context, {required VoidCallback onAdFinished}) async {
+  Future<void> showOrLoadInterstitialAd(
+    BuildContext context, {
+    required VoidCallback onAdFinished,
+  }) async {
     if (!await canShowAds()) {
-    // print("Skipping interstitial ad due to launch count");
-    // Directly continue your navigation or flow here since ad skipped
-    onAdFinished();
-    return;
+      // print("Skipping interstitial ad due to launch count");
+      // Directly continue your navigation or flow here since ad skipped
+      onAdFinished();
+      return;
     }
     if (isAdLoaded.value && _interstitialAd != null) {
       try {
@@ -208,7 +214,10 @@ class AdController extends GetxController {
                 children: const [
                   CircularProgressIndicator(color: Colors.white),
                   SizedBox(height: 16),
-                  Text("Loading Interstitial Ad...", style: TextStyle(color: Colors.white)),
+                  Text(
+                    "Loading Interstitial Ad...",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
             ),
@@ -217,7 +226,7 @@ class AdController extends GetxController {
       );
 
       InterstitialAd.load(
-        adUnitId: keys!=null?keys!.interstitial:"",
+        adUnitId: keys != null ? keys!.interstitial : "",
         request: const AdRequest(),
         adLoadCallback: InterstitialAdLoadCallback(
           onAdLoaded: (InterstitialAd ad) {
@@ -252,8 +261,11 @@ class AdController extends GetxController {
   }
 
   void preloadRewardedAd({int retryCount = 0, int maxRetries = 3}) {
-    final adUnitId =  keys!=null?keys!.rewarded:"";
-    if (isRewardedLoading.value || isRewardedLoaded.value || retryCount >= maxRetries) return;
+    final adUnitId = keys != null ? keys!.rewarded : "";
+    if (isRewardedLoading.value ||
+        isRewardedLoaded.value ||
+        retryCount >= maxRetries)
+      return;
     isRewardedLoading.value = true;
     RewardedAd.load(
       adUnitId: adUnitId,
@@ -287,8 +299,12 @@ class AdController extends GetxController {
     );
   }
 
-  void showOrLoadRewardedAd({required VoidCallback onRewarded, int retryCount = 0, int maxRetries = 3}) {
-    final adUnitId =  keys!=null?keys!.rewarded:"";
+  void showOrLoadRewardedAd({
+    required VoidCallback onRewarded,
+    int retryCount = 0,
+    int maxRetries = 3,
+  }) {
+    final adUnitId = keys != null ? keys!.rewarded : "";
     if (isRewardedLoaded.value && _rewardedAd != null) {
       _rewardedAd!.show(
         onUserEarnedReward: (ad, reward) {
@@ -350,30 +366,29 @@ class AdController extends GetxController {
             isRewardedLoaded.value = false;
             isRewardedLoading.value = false;
           },
-            onAdFailedToLoad: (LoadAdError error) {
-              // print('Rewarded Ad failed to load: ${error.code} - ${error.message}');
-              Get.back();
-              isRewardedLoading.value = false;
+          onAdFailedToLoad: (LoadAdError error) {
+            // print('Rewarded Ad failed to load: ${error.code} - ${error.message}');
+            Get.back();
+            isRewardedLoading.value = false;
 
-              if (retryCount + 1 >= maxRetries) {
-                // Max retries reached → proceed anyway
-                // print("Max retries reached. Proceeding without ad.");
-                onRewarded();
-              } else {
-                Future.delayed(Duration(seconds: 5), () {
-                  showOrLoadRewardedAd(
-                    onRewarded: onRewarded,
-                    retryCount: retryCount + 1,
-                    maxRetries: maxRetries,
-                  );
-                });
-              }
+            if (retryCount + 1 >= maxRetries) {
+              // Max retries reached → proceed anyway
+              // print("Max retries reached. Proceeding without ad.");
+              onRewarded();
+            } else {
+              Future.delayed(Duration(seconds: 5), () {
+                showOrLoadRewardedAd(
+                  onRewarded: onRewarded,
+                  retryCount: retryCount + 1,
+                  maxRetries: maxRetries,
+                );
+              });
             }
+          },
         ),
       );
     }
   }
-
 
   // void preloadNativeAd() {
   //   final adUnitId = AdUnits.native;
@@ -450,7 +465,8 @@ class AdController extends GetxController {
   Widget getBannerAdWidget1() {
     if (isBanner1Loaded.value && bannerAd1 != null) {
       return Container(
-        key: banner1Key, // Add unique key
+        key: banner1Key,
+        // Add unique key
         alignment: Alignment.center,
         width: bannerAd1!.size.width.toDouble(),
         height: bannerAd1!.size.height.toDouble(),
@@ -463,7 +479,8 @@ class AdController extends GetxController {
   Widget getBannerAdWidget2() {
     if (isBanner2Loaded.value && bannerAd2 != null) {
       return Container(
-        key: banner2Key, // Add unique key
+        key: banner2Key,
+        // Add unique key
         alignment: Alignment.center,
         width: bannerAd2!.size.width.toDouble(),
         height: bannerAd2!.size.height.toDouble(),
@@ -472,6 +489,7 @@ class AdController extends GetxController {
     }
     return const SizedBox.shrink();
   }
+
   // Method to refresh ads if needed
   void refreshBannerAd1() {
     bannerAd1?.dispose();
@@ -487,15 +505,13 @@ class AdController extends GetxController {
     preloadBannerAd2();
   }
 
-
-
   @override
   void onClose() {
     _interstitialAd?.dispose();
     _rewardedAd?.dispose();
     _nativeAd?.dispose();
     bannerAd1?.dispose(); // Added banner ad disposal
-    bannerAd2?.dispose();  // Added banner ad disposal
+    bannerAd2?.dispose(); // Added banner ad disposal
     _connectivitySubscription?.cancel();
     super.onClose();
   }
