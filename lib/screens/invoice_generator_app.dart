@@ -1106,12 +1106,24 @@ class _InvoiceHomePageState extends State<InvoiceHomePage>
       builder: (context) {
         return AlertDialog(
           title: Text('Enter name to save'),
-          content: TextField(
-            autofocus: true,
-            decoration: InputDecoration(hintText: 'Enter name to save'),
-            onChanged: (value) {
-              keyName = value;
-            },
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                autofocus: true,
+                decoration: InputDecoration(hintText: 'Enter name to save'),
+                onChanged: (value) {
+                  keyName = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Note: Your business info, client info, and other details will be saved. '
+                    'Items in the bill will not be saved.',
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -1134,6 +1146,7 @@ class _InvoiceHomePageState extends State<InvoiceHomePage>
       },
     );
   }
+
 
   Future<Uint8List> compressImage(String path) async {
     final image = img.decodeImage(File(path).readAsBytesSync())!;
